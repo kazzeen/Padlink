@@ -1,65 +1,83 @@
-import Image from "next/image";
+import Link from "next/link";
+import GlassButton from "@/components/ui/glass/GlassButton";
+import GlassCard from "@/components/ui/glass/GlassCard";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Navbar Placeholder */}
+      <nav className="glass-panel flex items-center justify-between px-8 py-4 border-b border-[var(--glass-border)] sticky top-0 z-50">
+        <div className="text-2xl font-bold text-[var(--glass-text)] drop-shadow-lg">PadLink</div>
+        <div className="space-x-4 flex items-center">
+          <ThemeToggle />
+          <Link href="/login" className="text-[var(--glass-text)] opacity-80 hover:opacity-100 transition-colors font-medium">
+            Login
+          </Link>
+          <Link href="/signup">
+            <GlassButton size="sm" variant="primary">
+              Sign Up
+            </GlassButton>
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="flex flex-col items-center justify-center px-4 py-20 text-center relative z-10">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/20 rounded-full blur-[100px] -z-10" />
+        
+        <h1 className="text-5xl md:text-7xl font-extrabold text-[var(--glass-text)] mb-6 drop-shadow-xl">
+          Find Your Perfect Roommate <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-600 dark:from-teal-300 dark:to-blue-300">
+            Stress-Free
+          </span>
+        </h1>
+        <p className="text-xl text-[var(--glass-text-muted)] max-w-2xl mb-10 drop-shadow-md">
+          Connect with compatible roommates based on lifestyle, budget, and personality. 
+          Swipe, chat, and live together happily.
+        </p>
+        <div className="flex gap-4">
+          <Link href="/signup">
+            <GlassButton size="lg" variant="primary" className="shadow-xl shadow-blue-500/20">
+              Get Started
+            </GlassButton>
+          </Link>
+          <Link href="/about">
+            <GlassButton size="lg" variant="secondary">
+              Learn More
+            </GlassButton>
+          </Link>
         </div>
       </main>
+
+      {/* Features Section */}
+      <section className="py-16 relative z-10">
+        <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
+          <GlassCard className="p-8 flex flex-col items-center text-center" hoverEffect>
+            <div className="text-4xl mb-4 p-4 bg-black/5 dark:bg-white/10 rounded-full">🧩</div>
+            <h3 className="text-xl font-bold mb-2 text-[var(--glass-text)]">Smart Matching</h3>
+            <p className="text-[var(--glass-text-muted)]">
+              Our algorithm matches you based on 20+ compatibility factors including sleep schedule, cleanliness, and social habits.
+            </p>
+          </GlassCard>
+          
+          <GlassCard className="p-8 flex flex-col items-center text-center" hoverEffect>
+            <div className="text-4xl mb-4 p-4 bg-black/5 dark:bg-white/10 rounded-full">🔒</div>
+            <h3 className="text-xl font-bold mb-2 text-[var(--glass-text)]">Verified Profiles</h3>
+            <p className="text-[var(--glass-text-muted)]">
+              Safety first. All users undergo identity verification so you can search with confidence.
+            </p>
+          </GlassCard>
+          
+          <GlassCard className="p-8 flex flex-col items-center text-center" hoverEffect>
+            <div className="text-4xl mb-4 p-4 bg-black/5 dark:bg-white/10 rounded-full">💬</div>
+            <h3 className="text-xl font-bold mb-2 text-[var(--glass-text)]">In-App Chat</h3>
+            <p className="text-[var(--glass-text-muted)]">
+              Connect safely without sharing personal contact info until you&apos;re ready.
+            </p>
+          </GlassCard>
+        </div>
+      </section>
     </div>
   );
 }

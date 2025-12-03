@@ -1,0 +1,279 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Using SQLite for local development ease. Switch to "postgresql" for production.
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  password  String?
+  image     String?
+  role      String     @default("USER") // USER, ROOMMATE_SEEKER, LISTER, ADMIN
+  
+  // Profile data
+  age       Int?
+  bio       String?
+  avatar    String?
+  
+  // Preferences
+  preferences PreferenceProfile?
+  
+  // Security
+  failedLoginAttempts Int       @default(0)
+  lockoutUntil        DateTime?
+  
+  // Relations
+  loginLogs           LoginLog[]
+  adminAccessLogs     AdminAccessLog[]
+
+  // Connections
+  sentRequests   Request[] @relation("sender")
+  receivedRequests Request[] @relation("receiver")
+  
+  // Listings
+  listings   Listing[]
+  
+  // Messages
+  sentMessages   Message[] @relation("sender")
+  receivedMessages Message[] @relation("receiver")
+  
+  // Reviews
+  reviewsGiven   Review[] @relation("reviewer")
+  reviewsReceived Review[] @relation("reviewee")
+  
+  // Subscriptions
+  subscription Subscription?
+
+  // Listing Applications
+  listingRequests RequestListing[]
+
+  // Notifications & Support
+  notifications   Notification[]
+  supportTickets  SupportTicket[]
+
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  
+  access_token       String?  
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PreferenceProfile {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Lifestyle
+  sleepSchedule    String // "early_bird", "night_owl", "flexible"
+  cleanlinesLevel  Int    // 1-5 scale
+  socialPreference String // "introvert", "extrovert", "ambivert"
+  smokingStatus    String // "non_smoker", "smoker", "okay_with_smoker"
+  
+  // Budget
+  minBudget   Float
+  maxBudget   Float
+  
+  // Location preferences
+  // SQLite doesn't support string arrays natively in the same way Postgres does, 
+  // so we might need to store as a comma-separated string or a separate table.
+  // For now, treating as string for SQLite compatibility (JSON stringified).
+  preferredCities String // Stored as JSON string
+  commutDistance  Int      // In miles
+  
+  // Compatibility dimensions
+  budgetWeight       Int @default(20)
+  locationWeight     Int @default(15)
+  sleepScheduleWeight Int @default(20)
+  foodHabitsWeight   Int @default(15)
+  cleanlinessWeight  Int @default(15)
+  personalityWeight  Int @default(15)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Listing {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title     String
+  description String?
+  address   String
+  city      String
+  state     String
+  zipCode   String
+  
+  // Property details
+  roomType  String // "private", "shared"
+  bedrooms  Int
+  bathrooms Int
+  
+  // Rental info
+  rentAmount Float
+  moveInDate DateTime
+  leaseTerm  Int // months
+  
+  // Amenities
+  amenities String // Stored as JSON string for SQLite
+  
+  // Images
+  images    String // Stored as JSON string for SQLite
+  
+  // Status
+  isActive  Boolean @default(true)
+  
+  applications RequestListing[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Request {
+  id        String     @id @default(cuid())
+  senderId  String
+  sender    User       @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId String
+  receiver  User       @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  status    String     @default("PENDING") // PENDING, ACCEPTED, REJECTED, BLOCKED
+  message   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RequestListing {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  listingId String
+  listing   Listing    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  status    String     @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  message   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id        String     @id @default(cuid())
+  senderId  String
+  sender    User       @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId String
+  receiver  User       @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  content   String
+  read      Boolean    @default(false)
+  
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id        String     @id @default(cuid())
+  reviewerId String
+  reviewer  User       @relation("reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  
+  revieweeId String
+  reviewee  User       @relation("reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+  
+  rating    Int        // 1-5
+  comment   String?
+  
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  plan      String     // "FREE", "PREMIUM"
+  startDate DateTime   @default(now())
+  endDate   DateTime?
+  isActive  Boolean    @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress String
+  userAgent String
+  success   Boolean
+  createdAt DateTime @default(now())
+}
+
+model AdminAccessLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  resource  String
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   // Recipient
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // "REQUEST_RECEIVED", "REQUEST_ACCEPTED", "MESSAGE_RECEIVED", "SYSTEM"
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?  // Action link (e.g., "/requests", "/messages/123")
+  createdAt DateTime @default(now())
+}
+
+model SupportTicket {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  message   String
+  category  String   // "GENERAL", "TECHNICAL", "BILLING", "ABUSE"
+  status    String   // "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
