@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -12,7 +11,7 @@ const requestSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
     const result = requestSchema.safeParse(body);
     if (!result.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: result.error.errors },
+        { error: "Validation failed", details: result.error.issues },
         { status: 400 }
       );
     }
@@ -65,12 +64,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Fetch current user name for notification to ensure consistency
+    const sender = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true },
+    });
+    const senderName = sender?.name || session.user.name || "Someone";
+
     // Send Notification to Receiver
     await createNotification({
       userId: receiverId,
       type: "REQUEST_RECEIVED",
       title: "New Roommate Request",
-      message: `${session.user.name || "Someone"} wants to connect with you!`,
+      message: `${senderName} wants to connect with you!`,
       link: "/requests",
     });
 
@@ -86,13 +92,30 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type") || "all"; // "sent", "received", "all"
+    const targetId = searchParams.get("targetId");
+
+    if (targetId) {
+      const request = await prisma.request.findFirst({
+        where: {
+          OR: [
+            { senderId: session.user.id, receiverId: targetId },
+            { senderId: targetId, receiverId: session.user.id },
+          ],
+        },
+        include: {
+          sender: { select: { id: true, name: true, image: true } },
+          receiver: { select: { id: true, name: true, image: true } },
+        },
+      });
+      return NextResponse.json(request || null);
+    }
 
     let whereClause: any = {};
 
@@ -110,14 +133,10 @@ export async function GET(req: NextRequest) {
     }
 
     const requests = await prisma.request.findMany({
-      where: whereClause,
+      where: whereClause as object,
       include: {
-        sender: {
-          select: { id: true, name: true, image: true, role: true },
-        },
-        receiver: {
-          select: { id: true, name: true, image: true, role: true },
-        },
+        sender: { select: { id: true, name: true, image: true } },
+        receiver: { select: { id: true, name: true, image: true } },
       },
       orderBy: { createdAt: "desc" },
     });

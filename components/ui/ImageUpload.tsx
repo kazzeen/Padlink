@@ -67,8 +67,9 @@ export default function ImageUpload({ currentImage, onUploadComplete }: ImageUpl
         const data = await res.json();
         onUploadComplete(data.url);
         setPreview(data.url); // Update with server URL
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Upload failed";
+        setError(message);
         // Revert preview on error
         setPreview(currentImage || null);
       } finally {

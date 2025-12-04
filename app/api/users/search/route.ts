@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -25,38 +24,32 @@ export async function GET(req: NextRequest) {
     const city = searchParams.get("city") || "";
     const sort = searchParams.get("sort") || "newest"; // newest, budget_asc, budget_desc
 
-    // Build Prisma Query
-    const whereClause: Prisma.UserWhereInput = {
-      id: { not: session.user.id }, // Exclude self
-      // Only show users who have preferences set (active seekers)
-      preferences: { isNot: null },
-      OR: [
-        { name: { contains: query } }, // SQLite is case-insensitive by default for contains? No, usually case-sensitive.
-        // For SQLite, contains is case-sensitive usually, but we can't easily do mode: insensitive here with all providers.
-        // We'll stick to standard contains for now.
-        { bio: { contains: query } },
-      ],
-    };
+    // Prepare preferences filter
+    const preferencesFilter: Prisma.PreferenceProfileWhereInput = {};
 
-    // Add specific filters
     if (city) {
-        // Filter by preferredCities in PreferenceProfile
-        // Since it's a string (JSON), we use contains
-        whereClause.preferences = {
-            ...whereClause.preferences,
-            preferredCities: { contains: city }
-        };
+        preferencesFilter.preferredCities = { contains: city };
     }
 
     if (minBudget > 0 || maxBudget < 10000) {
-        whereClause.preferences = {
-            ...(whereClause.preferences as any), // Type assertion needed for nested optional
-            AND: [
-                { minBudget: { gte: minBudget } },
-                { maxBudget: { lte: maxBudget } }
-            ]
-        };
+        preferencesFilter.AND = [
+            { minBudget: { gte: minBudget } },
+            { maxBudget: { lte: maxBudget } }
+        ];
     }
+
+    // Build Prisma Query
+    const whereClause: Prisma.UserWhereInput = {
+      id: { not: session.user.id }, // Exclude self
+      // Only show users who have preferences set (active seekers) and match criteria
+      preferences: {
+        is: preferencesFilter
+      },
+      OR: [
+        { name: { contains: query } }, 
+        { bio: { contains: query } },
+      ],
+    };
 
     // Sorting
     let orderBy: Prisma.UserOrderByWithRelationInput = { createdAt: 'desc' };

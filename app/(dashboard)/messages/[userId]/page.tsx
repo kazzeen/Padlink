@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef, use } from "react";
-import { useSession } from "next-auth/react";
+import { useEffect, useState, useRef, use, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks/useAuth";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import GlassInput from "@/components/ui/glass/GlassInput";
@@ -16,14 +17,15 @@ type Message = {
 
 export default function ChatPage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = use(params);
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const res = await fetch(`/api/messages/${userId}`);
       if (res.ok) {
@@ -34,14 +36,14 @@ export default function ChatPage({ params }: { params: Promise<{ userId: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     fetchMessages();
     // Poll for new messages every 5 seconds
     const interval = setInterval(fetchMessages, 5000);
     return () => clearInterval(interval);
-  }, [userId]);
+  }, [fetchMessages]);
 
   useEffect(() => {
     // Scroll to bottom on new messages
@@ -75,6 +77,14 @@ export default function ChatPage({ params }: { params: Promise<{ userId: string 
     }
   };
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/messages");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -85,7 +95,16 @@ export default function ChatPage({ params }: { params: Promise<{ userId: string 
 
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-4">
+        <GlassButton
+          onClick={handleBack}
+          variant="secondary"
+          size="sm"
+          className="rounded-full w-10 h-10 p-0 flex items-center justify-center hover:bg-white/20"
+          aria-label="Go back to previous page"
+        >
+          ←
+        </GlassButton>
          <h1 className="text-2xl font-bold text-[var(--glass-text)] drop-shadow-md">Chat</h1>
       </div>
       

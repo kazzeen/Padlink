@@ -2,19 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useNotificationCount } from "@/lib/hooks/useNotificationCount";
 import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, signOut } = useAuth();
+  const { count: unreadCount } = useNotificationCount();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Load collapsed state from localStorage on mount
   useEffect(() => {
     const storedState = localStorage.getItem("sidebarCollapsed");
     if (storedState) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCollapsed(JSON.parse(storedState));
     }
   }, []);
@@ -31,8 +34,9 @@ export default function Sidebar() {
     { name: "Matches", href: "/matches", icon: "🧩" },
     { name: "Requests", href: "/requests", icon: "📩" },
     { name: "Messages", href: "/messages", icon: "💬" },
-    { name: "Profile", href: "/profile", icon: "👤" },
     { name: "Notifications", href: "/notifications", icon: "🔔" },
+    { name: "Wallet", href: "/wallet", icon: "💳" },
+    { name: "Profile", href: "/profile", icon: "👤" },
     { name: "Help/Support", href: "/support", icon: "❓" },
   ];
 
@@ -69,7 +73,7 @@ export default function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+                  className={`relative flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
                       ? "glass-button bg-black/10 dark:bg-white/20 text-[var(--glass-text)] shadow-lg scale-[1.02]"
                       : "text-[var(--glass-text)] opacity-70 hover:bg-black/5 dark:hover:bg-white/10 hover:opacity-100"
@@ -81,6 +85,15 @@ export default function Sidebar() {
                   {!isCollapsed && (
                     <span className="font-medium truncate">{item.name}</span>
                   )}
+                  {item.name === "Notifications" && unreadCount > 0 && (
+                     <span
+                       className="absolute top-2 right-2 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-[#ff0000] text-white text-xs font-bold rounded-full shadow-sm"
+                       aria-label={`${unreadCount} unread notifications`}
+                       aria-live="polite"
+                     >
+                       {unreadCount > 99 ? "99+" : unreadCount}
+                     </span>
+                   )}
                 </Link>
               </li>
             );
@@ -96,7 +109,7 @@ export default function Sidebar() {
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className={`flex items-center w-full px-4 py-3 rounded-lg text-red-600 dark:text-red-300 hover:bg-red-500/20 hover:text-red-700 dark:hover:text-red-100 transition-colors ${
+          className={`glass-button flex items-center w-full px-4 py-3 rounded-lg text-[var(--glass-text)] ${
             isCollapsed ? "justify-center" : ""
           }`}
           title={isCollapsed ? "Logout" : ""}

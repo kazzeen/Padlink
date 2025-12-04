@@ -11,9 +11,10 @@ datasource db {
 
 model User {
   id        String     @id @default(cuid())
-  email     String     @unique
+  email     String?    @unique
+  privyId   String?    @unique // Maps to Privy DID
   name      String?
-  password  String?
+  password  String?    // Kept for legacy/fallback
   image     String?
   role      String     @default("USER") // USER, ROOMMATE_SEEKER, LISTER, ADMIN
   

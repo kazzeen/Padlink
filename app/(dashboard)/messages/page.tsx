@@ -1,46 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import GlassCard from "@/components/ui/glass/GlassCard";
-
-type Conversation = {
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-  lastMessage: {
-    content: string;
-    createdAt: string;
-  };
-};
+import { useConversations } from "@/hooks/useConversations";
 
 export default function MessagesPage() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { conversations, isLoading } = useConversations();
 
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const res = await fetch("/api/messages");
-        if (res.ok) {
-          setConversations(await res.json());
-        }
-      } catch (error) {
-        console.error("Failed to fetch messages:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConversations();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 dark:border-[var(--glass-border)]"></div>
+        <div data-testid="loading-spinner" className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 dark:border-[var(--glass-border)]"></div>
       </div>
     );
   }
@@ -54,7 +25,7 @@ export default function MessagesPage() {
         </p>
       </div>
 
-      {conversations.length === 0 ? (
+      {!conversations || conversations.length === 0 ? (
         <GlassCard className="p-8 text-center">
           <p className="text-[var(--glass-text-muted)] mb-4">No conversations yet.</p>
           <p className="text-sm text-[var(--glass-text-muted)]">
@@ -66,9 +37,9 @@ export default function MessagesPage() {
           {conversations.map((conv) => (
             <Link href={`/messages/${conv.user.id}`} key={conv.user.id}>
               <GlassCard hoverEffect={true} className="p-4 flex items-center space-x-4 cursor-pointer">
-                <div className="h-12 w-12 rounded-full bg-gray-300 dark:bg-white/20 flex items-center justify-center overflow-hidden">
+                <div className="relative h-12 w-12 rounded-full bg-gray-300 dark:bg-white/20 flex items-center justify-center overflow-hidden">
                    {conv.user.image ? (
-                       <img src={conv.user.image} alt={conv.user.name || "User"} className="h-full w-full object-cover" />
+                       <Image src={conv.user.image} alt={conv.user.name || "User"} fill className="object-cover" />
                    ) : (
                        <span className="text-xl font-bold text-gray-600 dark:text-white">
                          {(conv.user.name || "U").charAt(0).toUpperCase()}
@@ -81,11 +52,13 @@ export default function MessagesPage() {
                       {conv.user.name || "Anonymous User"}
                     </h3>
                     <span className="text-xs text-[var(--glass-text-muted)]">
-                      {new Date(conv.lastMessage.createdAt).toLocaleDateString()}
+                      {conv.lastMessage 
+                        ? new Date(conv.lastMessage.createdAt).toLocaleDateString()
+                        : "New Connection"}
                     </span>
                   </div>
-                  <p className="text-[var(--glass-text-muted)] truncate text-sm">
-                    {conv.lastMessage.content}
+                  <p className={`truncate text-sm ${!conv.lastMessage ? "text-blue-500 font-medium" : "text-[var(--glass-text-muted)]"}`}>
+                    {conv.lastMessage ? conv.lastMessage.content : "Start a conversation"}
                   </p>
                 </div>
               </GlassCard>

@@ -5,10 +5,25 @@ import SearchFilters from "@/components/search/SearchFilters";
 import UserCard from "@/components/search/UserCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 
+interface User {
+  id: string;
+  name?: string | null;
+  image?: string | null;
+  avatar?: string | null;
+  age?: number | null;
+  bio?: string | null;
+  preferences?: {
+    minBudget?: number | null;
+    maxBudget?: number | null;
+    preferredCities?: string | null;
+  } | null;
+  [key: string]: unknown;
+}
+
 export default function BrowsePage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -16,7 +31,7 @@ export default function BrowsePage() {
     totalPages: 0,
   });
 
-  const fetchUsers = useCallback(async (currentFilters: any, page = 1) => {
+  const fetchUsers = useCallback(async (currentFilters: Record<string, unknown>, page = 1) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({

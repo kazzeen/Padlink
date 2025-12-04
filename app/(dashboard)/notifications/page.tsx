@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useSWRConfig } from "swr";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import Link from "next/link";
@@ -18,7 +19,8 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
-  const { data: session, status } = useSession();
+ const { data: session, status } = useAuth(); // useAuth returns data as session
+  const { mutate } = useSWRConfig();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -51,6 +53,7 @@ export default function NotificationsPage() {
       if (res.ok) {
         // Optimistically update UI
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        mutate("/api/notifications/unread-count");
         router.refresh();
       }
     } catch (error) {
@@ -62,6 +65,7 @@ export default function NotificationsPage() {
     try {
       await fetch(`/api/notifications/${id}`, { method: "PUT" });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      mutate("/api/notifications/unread-count");
     } catch (error) {
       console.error("Failed to mark as read", error);
     }

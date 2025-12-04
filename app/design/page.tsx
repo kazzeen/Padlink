@@ -75,7 +75,7 @@ export default function DesignSystemPage() {
                 <div className="space-y-2">
                   <div className="h-20 rounded-lg bg-gradient-to-b from-[#001F3F] via-[#0081A7] to-[#006D77] shadow-lg border border-[var(--glass-border)]"></div>
                   <p className="text-[var(--glass-text)] font-medium">Dark Mode Background</p>
-                  <p className="text-[var(--glass-text)] opacity-60 text-xs">Ocean Gradient (#001F3F -> #006D77)</p>
+                  <p className="text-[var(--glass-text)] opacity-60 text-xs">Ocean Gradient (#001F3F -&gt; #006D77)</p>
                 </div>
               </div>
             </div>

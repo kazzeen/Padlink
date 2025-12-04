@@ -16,12 +16,12 @@ export default function GlassButton({
   disabled,
   ...props
 }: GlassButtonProps) {
-  const baseStyles = "glass-button rounded-xl font-semibold flex items-center justify-center gap-2 relative overflow-hidden";
+  const baseStyles = "glass-button rounded-xl font-semibold flex items-center justify-center gap-2 relative overflow-hidden text-[var(--glass-text)] border-[var(--glass-border)]";
   
   const variants = {
-    primary: "bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/30 dark:bg-white/10 dark:hover:bg-white/20 dark:border-white/30",
-    secondary: "bg-transparent border-gray-500/20 hover:bg-gray-500/10 dark:border-white/20 dark:hover:bg-white/10",
-    danger: "bg-red-500/10 border-red-500/30 hover:bg-red-500/20 text-red-600 dark:text-red-100 dark:bg-red-500/20 dark:hover:bg-red-500/30",
+    primary: "hover:brightness-110",
+    secondary: "opacity-90 hover:opacity-100",
+    danger: "hover:brightness-110",
   };
 
   const sizes = {

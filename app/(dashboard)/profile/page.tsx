@@ -1,4 +1,5 @@
 import ProfileForm from "@/components/Forms/ProfileForm";
+import WalletAccounts from "@/components/Profile/WalletAccounts";
 
 export const metadata = {
   title: "Profile - PadLink",
@@ -16,6 +17,8 @@ export default function ProfilePage() {
       </div>
       
       <ProfileForm />
+
+      <WalletAccounts />
     </div>
   );
 }

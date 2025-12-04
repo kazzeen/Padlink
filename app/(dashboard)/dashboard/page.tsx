@@ -1,13 +1,13 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/lib/hooks/useAuth";
 import Link from "next/link";
-import ProfileForm from "@/components/forms/ProfileForm";
+import ProfileForm from "@/components/Forms/ProfileForm";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useAuth();
 
   if (status === "loading") {
     return <div className="p-8 text-center text-[var(--glass-text)]">Loading...</div>;

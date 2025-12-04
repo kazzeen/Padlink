@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
-export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+export async function GET() {
+  const session = await getSession();
 
   if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,11 +19,8 @@ export async function GET(req: NextRequest) {
     await prisma.adminAccessLog.create({
       data: {
         userId: session.user.id,
-        action: "VIEW_STATS",
-        success: false,
-        details: "Unauthorized access attempt to admin stats",
-        ip: req.headers.get("x-forwarded-for") || "unknown",
-        userAgent: req.headers.get("user-agent") || "unknown",
+        action: "VIEW_STATS_FAILED",
+        resource: "admin_dashboard",
       }
     });
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -35,10 +31,7 @@ export async function GET(req: NextRequest) {
     data: {
       userId: user.id,
       action: "VIEW_STATS",
-      success: true,
-      details: "Viewed admin dashboard stats",
-      ip: req.headers.get("x-forwarded-for") || "unknown",
-      userAgent: req.headers.get("user-agent") || "unknown",
+      resource: "admin_dashboard",
     }
   });
 

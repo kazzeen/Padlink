@@ -19,15 +19,15 @@
   --blob-color-3: #FDBA74; /* orange-300 */
   --blob-color-4: #5EEAD4; /* teal-300 */
 
-  /* Glass Vars Light */
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-  --glass-text: #212121;
-  --glass-text-muted: #64748b;
-  --glass-input-bg: rgba(255, 255, 255, 0.5);
-  --glass-input-border: rgba(203, 213, 225, 0.6);
-  --glass-input-focus-bg: rgba(255, 255, 255, 0.8);
+  /* Glass Vars Light (match dark mode shade) */
+  --glass-bg: rgba(30, 30, 30, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --glass-text: #F5F5F5;
+  --glass-text-muted: rgba(255, 255, 255, 0.6);
+  --glass-input-bg: rgba(255, 255, 255, 0.05);
+  --glass-input-border: rgba(255, 255, 255, 0.2);
+  --glass-input-focus-bg: rgba(255, 255, 255, 0.1);
 
   /* Text Stroke */
   --text-stroke-width: 1px;
@@ -101,7 +101,7 @@ body {
 }
 
 /* Global Text Stroke for Visibility */
-h1, h2, h3, h4, h5, h6, p, span, a, li, label, button, input, textarea, select {
+h1, h2, h3, h4, h5, h6, p, span, a, li, label, button {
   -webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
   /* Optional: paint-order to prevent stroke from eating too much of the text */
   paint-order: stroke fill;
@@ -144,7 +144,7 @@ h1, h2, h3, h4, h5, h6, p, span, a, li, label, button, input, textarea, select {
 .glass-input {
   background: var(--glass-input-bg);
   border: 1px solid var(--glass-input-border);
-  color: var(--glass-text);
+  color: var(--foreground);
   backdrop-filter: blur(10px);
 }
 

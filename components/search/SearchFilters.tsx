@@ -3,11 +3,10 @@
 import { useState, useEffect } from "react";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassInput from "@/components/ui/glass/GlassInput";
-import GlassButton from "@/components/ui/glass/GlassButton";
 import { useDebounce } from "@/lib/hooks/useDebounce"; // We'll create this hook
 
 interface SearchFiltersProps {
-  onFilterChange: (filters: any) => void;
+  onFilterChange: (filters: unknown) => void;
 }
 
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {

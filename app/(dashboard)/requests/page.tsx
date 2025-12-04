@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
@@ -24,6 +25,7 @@ type Request = {
 };
 
 export default function RequestsPage() {
+  const router = useRouter();
   const [receivedRequests, setReceivedRequests] = useState<Request[]>([]);
   const [sentRequests, setSentRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,10 +74,39 @@ export default function RequestsPage() {
     }
   };
 
+  const handleRequestClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    
+    // Prevent navigation if clicking on interactive elements
+    if (target.closest('button') || target.closest('a')) {
+      return;
+    }
+
+    const card = target.closest('[data-user-id]');
+    if (card) {
+      const userId = card.getAttribute('data-user-id');
+      if (userId) {
+        try {
+          const profileUrl = `/profile/${userId}`;
+          router.push(profileUrl);
+        } catch (error) {
+          console.error("Navigation failed:", error);
+        }
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, userId: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      router.push(`/profile/${userId}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 dark:border-[var(--glass-border)]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 dark:border-[var(--glass-border)]" data-testid="loading-spinner"></div>
       </div>
     );
   }
@@ -105,9 +136,22 @@ export default function RequestsPage() {
             <p className="text-[var(--glass-text-muted)]">No received requests yet.</p>
           </GlassCard>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div 
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            onClick={handleRequestClick}
+            data-testid="received-requests-grid"
+          >
             {receivedRequests.map((req) => (
-              <GlassCard key={req.id} className="p-6 space-y-4">
+              <GlassCard 
+                key={req.id} 
+                className="p-6 space-y-4 cursor-pointer hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
+                data-user-id={req.sender.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`View profile of ${req.sender.name || "User"}`}
+                onKeyDown={(e) => handleKeyDown(e, req.sender.id)}
+                data-testid={`request-card-${req.sender.id}`}
+              >
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--glass-border)] bg-white/10 flex-shrink-0">
@@ -152,7 +196,10 @@ export default function RequestsPage() {
                       size="sm" 
                       variant="primary" 
                       className="flex-1"
-                      onClick={() => handleStatusUpdate(req.id, "ACCEPTED")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusUpdate(req.id, "ACCEPTED");
+                      }}
                     >
                       Accept
                     </GlassButton>
@@ -160,7 +207,10 @@ export default function RequestsPage() {
                       size="sm" 
                       variant="secondary" 
                       className="flex-1 text-red-500 hover:text-red-600"
-                      onClick={() => handleStatusUpdate(req.id, "REJECTED")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusUpdate(req.id, "REJECTED");
+                      }}
                     >
                       Decline
                     </GlassButton>
@@ -181,9 +231,22 @@ export default function RequestsPage() {
             <p className="text-[var(--glass-text-muted)]">You haven&apos;t sent any requests yet.</p>
           </GlassCard>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div 
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            onClick={handleRequestClick}
+            data-testid="sent-requests-grid"
+          >
             {sentRequests.map((req) => (
-              <GlassCard key={req.id} className="p-6 flex justify-between items-center">
+              <GlassCard 
+                key={req.id} 
+                className="p-6 flex justify-between items-center cursor-pointer hover:bg-white/5 transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 outline-none"
+                data-user-id={req.receiver.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`View profile of ${req.receiver.name || "User"}`}
+                onKeyDown={(e) => handleKeyDown(e, req.receiver.id)}
+                data-testid={`request-card-${req.receiver.id}`}
+              >
                 <div className="flex items-center gap-3">
                   <div className="relative w-10 h-10 rounded-full overflow-hidden border border-[var(--glass-border)] bg-white/10 flex-shrink-0">
                     {req.receiver.image ? (
@@ -201,20 +264,20 @@ export default function RequestsPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-[var(--glass-text)]">
-                      To: {req.receiver.name || "Anonymous"}
+                      {req.receiver.name || "Anonymous"}
                     </h3>
                     <p className="text-xs text-[var(--glass-text-muted)]">
-                      {new Date(req.createdAt).toLocaleDateString()}
+                      Sent on {new Date(req.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                 <div className={`px-3 py-1 rounded-full text-xs font-medium border
-                    ${req.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
-                      req.status === 'ACCEPTED' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
-                      'bg-red-500/10 text-red-600 border-red-500/20'}
-                  `}>
-                    {req.status}
-                  </div>
+                <div className={`px-3 py-1 rounded-full text-xs font-medium border
+                  ${req.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
+                    req.status === 'ACCEPTED' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
+                    'bg-red-500/10 text-red-600 border-red-500/20'}
+                `}>
+                  {req.status}
+                </div>
               </GlassCard>
             ))}
           </div>

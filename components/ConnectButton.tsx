@@ -2,19 +2,31 @@
 
 import { useState } from "react";
 import GlassButton from "@/components/ui/glass/GlassButton";
+import { useConnectionStatus } from "@/lib/hooks/useConnectionStatus";
 
 interface ConnectButtonProps {
   receiverId: string;
+  receiverName?: string; // Added for analytics/feedback potential
   initialStatus?: "NONE" | "PENDING" | "ACCEPTED" | "REJECTED";
   onConnect?: () => void;
 }
 
-export default function ConnectButton({ receiverId, initialStatus = "NONE", onConnect }: ConnectButtonProps) {
-  const [status, setStatus] = useState(initialStatus);
-  const [isLoading, setIsLoading] = useState(false);
+export default function ConnectButton({ receiverId, receiverName, initialStatus = "NONE", onConnect }: ConnectButtonProps) {
+  const { request, isLoading: isCheckingStatus, mutate } = useConnectionStatus(receiverId);
+  const [isSending, setIsSending] = useState(false);
+
+  // Determine current status:
+  // 1. If loading (request undefined), use initialStatus
+  // 2. If loaded and request exists, use request.status
+  // 3. If loaded and request is null, status is NONE
+  const currentStatus = request === undefined 
+    ? initialStatus 
+    : (request ? request.status : "NONE");
+
+  const isLoading = isSending || (isCheckingStatus && request === undefined);
 
   const handleConnect = async () => {
-    setIsLoading(true);
+    setIsSending(true);
     try {
       const res = await fetch("/api/requests", {
         method: "POST",
@@ -23,7 +35,8 @@ export default function ConnectButton({ receiverId, initialStatus = "NONE", onCo
       });
 
       if (res.ok) {
-        setStatus("PENDING");
+        // Refresh the status via SWR
+        await mutate();
         if (onConnect) onConnect();
       } else {
         const data = await res.json();
@@ -33,21 +46,21 @@ export default function ConnectButton({ receiverId, initialStatus = "NONE", onCo
       console.error("Connection error:", error);
       alert("An error occurred");
     } finally {
-      setIsLoading(false);
+      setIsSending(false);
     }
   };
 
-  if (status === "PENDING") {
+  if (currentStatus === "PENDING") {
     return (
-      <GlassButton size="sm" variant="secondary" disabled className="opacity-70 cursor-not-allowed">
-        Request Sent
+      <GlassButton size="sm" variant="secondary" disabled className="opacity-70 cursor-not-allowed w-full">
+        Request Pending
       </GlassButton>
     );
   }
 
-  if (status === "ACCEPTED") {
+  if (currentStatus === "ACCEPTED") {
     return (
-      <GlassButton size="sm" variant="primary" disabled className="opacity-100 cursor-default bg-green-500/20 text-green-700 dark:text-green-200 border-green-500/30">
+      <GlassButton size="sm" variant="primary" disabled className="opacity-100 cursor-default bg-green-500/20 text-green-700 dark:text-green-200 border-green-500/30 w-full">
         Connected
       </GlassButton>
     );
@@ -59,6 +72,8 @@ export default function ConnectButton({ receiverId, initialStatus = "NONE", onCo
       variant="primary" 
       onClick={handleConnect}
       isLoading={isLoading}
+      disabled={isLoading}
+      className="w-full"
     >
       Connect
     </GlassButton>

@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -31,7 +30,7 @@ const profileSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -43,9 +42,11 @@ export async function GET() {
     });
 
     if (!user) {
+      console.warn(`[Profile] User not found for session ID: ${session.user.id}`);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    console.log(`[Profile] Retrieved profile for user: ${user.email} (${user.id})`);
     return NextResponse.json(user);
   } catch (error) {
     console.error("Profile fetch error:", error);
@@ -58,7 +59,7 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -73,7 +74,7 @@ export async function PUT(request: NextRequest) {
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
         return NextResponse.json(
-          { error: "Validation failed", details: validationError.errors },
+          { error: "Validation failed", details: validationError.issues },
           { status: 400 }
         );
       }

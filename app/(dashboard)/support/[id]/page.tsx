@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
@@ -18,19 +18,13 @@ interface SupportTicket {
 
 export default function TicketDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: session, status } = useSession();
+  const { status } = useAuth();
   const router = useRouter();
   const [ticket, setTicket] = useState<SupportTicket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (status === "authenticated" && id) {
-      fetchTicket();
-    }
-  }, [status, id]);
-
-  const fetchTicket = async () => {
+  const fetchTicket = useCallback(async () => {
     try {
       const res = await fetch(`/api/support/${id}`);
       if (!res.ok) {
@@ -44,7 +38,13 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ id: st
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (status === "authenticated" && id) {
+      fetchTicket();
+    }
+  }, [status, id, fetchTicket]);
 
   if (status === "loading" || loading) {
     return <div className="p-8 text-center text-[var(--glass-text)]">Loading ticket...</div>;

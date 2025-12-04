@@ -7,7 +7,19 @@ import GlassButton from "@/components/ui/glass/GlassButton";
 import ConnectButton from "@/components/ConnectButton";
 
 interface UserCardProps {
-  user: any;
+  user: {
+    id: string;
+    name?: string | null;
+    image?: string | null;
+    avatar?: string | null;
+    age?: number | null;
+    bio?: string | null;
+    preferences?: {
+      minBudget?: number | null;
+      maxBudget?: number | null;
+      preferredCities?: string | null;
+    } | null;
+  };
 }
 
 export default function UserCard({ user }: UserCardProps) {
@@ -70,7 +82,7 @@ export default function UserCard({ user }: UserCardProps) {
                 </GlassButton>
             </Link>
             <div className="flex-1">
-                 <ConnectButton receiverId={user.id} />
+                 <ConnectButton receiverId={user.id} receiverName={user.name || "Anonymous"} />
             </div>
         </div>
       </div>

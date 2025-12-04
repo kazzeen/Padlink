@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/lib/hooks/useAuth";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import Link from "next/link";
@@ -15,7 +15,7 @@ interface SupportTicket {
 }
 
 export default function SupportPage() {
-  const { data: session, status } = useSession();
+  const { status } = useAuth();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +61,7 @@ export default function SupportPage() {
             <h2 className="text-xl font-semibold text-[var(--glass-text)] mb-4">My Tickets</h2>
             {tickets.length === 0 ? (
             <GlassCard className="p-8 text-center">
-                <p className="text-[var(--glass-text-muted)]">You haven't submitted any support tickets yet.</p>
+                <p className="text-[var(--glass-text-muted)]">You haven&apos;t submitted any support tickets yet.</p>
             </GlassCard>
             ) : (
             <div className="space-y-4">

@@ -1,5 +1,6 @@
 import { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import { Adapter } from "next-auth/adapters";
@@ -9,6 +10,17 @@ import { v4 as uuidv4 } from "uuid";
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      authorization: {
+        params: {
+          scope: "openid email profile",
+          prompt: "consent",
+          access_type: "offline",
+        },
+      },
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -54,26 +66,26 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!user) {
-          await prisma.loginLog.create({
-            data: {
-              email: credentials.email,
-              success: false,
-              reason: "User not found",
-            }
-          });
+          // await prisma.loginLog.create({
+          //   data: {
+          //     email: credentials.email,
+          //     success: false,
+          //     reason: "User not found",
+          //   }
+          // });
           return null;
         }
 
         // Check Lockout
         if (user.lockoutUntil && user.lockoutUntil > new Date()) {
-          await prisma.loginLog.create({
-            data: {
-              userId: user.id,
-              email: user.email,
-              success: false,
-              reason: "Account locked",
-            }
-          });
+          // await prisma.loginLog.create({
+          //   data: {
+          //     userId: user.id,
+          //     email: user.email,
+          //     success: false,
+          //     reason: "Account locked",
+          //   }
+          // });
           throw new Error("Account is temporarily locked. Please try again later.");
         }
 
@@ -105,9 +117,9 @@ export const authOptions: NextAuthOptions = {
           await prisma.loginLog.create({
             data: {
               userId: user.id,
-              email: user.email,
               success: false,
-              reason: "Invalid password",
+              ipAddress: "unknown",
+              userAgent: "unknown",
             }
           });
            
@@ -126,9 +138,9 @@ export const authOptions: NextAuthOptions = {
         await prisma.loginLog.create({
           data: {
             userId: user.id,
-            email: user.email,
             success: true,
-            reason: "Login successful",
+            ipAddress: "unknown",
+            userAgent: "unknown",
           }
         });
 
@@ -138,10 +150,32 @@ export const authOptions: NextAuthOptions = {
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    jwt: async ({ token, user }) => {
+    signIn: async ({ account }) => {
+      try {
+        if (account?.provider === "google" && account.id_token) {
+          const res = await fetch(
+            `https://oauth2.googleapis.com/tokeninfo?id_token=${account.id_token}`
+          );
+          if (!res.ok) return false;
+          const data = await res.json();
+          const aud = data.aud as string | undefined;
+          if (!aud || aud !== (process.env.GOOGLE_CLIENT_ID || "")) {
+            return false;
+          }
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    jwt: async ({ token, user, account }) => {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+      }
+      if (account?.provider === "google") {
+        token.provider = "google";
+        if (account.id_token) token.id_token = account.id_token;
       }
       return token;
     },
@@ -150,9 +184,13 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
       }
+      if ("provider" in token) {
+        (session as { provider?: unknown } & typeof session).provider = token.provider;
+      }
       return session;
     },
   },
+  events: {},
   pages: {
     signIn: "/login",
     error: "/login",

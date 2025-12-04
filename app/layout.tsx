@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import SessionProvider from "@/components/Auth/SessionProvider";
+import PrivyProviderWrapper from "@/components/Auth/PrivyProviderWrapper";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
@@ -37,7 +37,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AnimatedBackground />
-          <SessionProvider>{children}</SessionProvider>
+          <PrivyProviderWrapper>{children}</PrivyProviderWrapper>
         </ThemeProvider>
       </body>
     </html>

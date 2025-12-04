@@ -14,3 +14,20 @@
    - If successful, the new image will replace the old one.
    - If there is an error (e.g., file too large), an error message will appear.
 5. **Save Profile**: The profile form will automatically update with the new image URL. You may need to click "Save Changes" if you made other edits, but the image upload is persisted immediately upon selection.
+
+# Wallet Management
+
+## Managing Your Wallet
+
+1. **Access Wallet**: Click the "Wallet" icon in the sidebar navigation.
+2. **Account Overview**: 
+   - View your connected wallet address (click "Copy" to copy to clipboard).
+   - See your current balance (ETH or SOL) and network status.
+3. **Transaction History**: 
+   - View recent transactions for Ethereum Mainnet and Solana Mainnet.
+   - Click on a transaction to expand details.
+   - **Note**: Transaction history relies on public APIs and may be rate-limited.
+4. **Network Management**: 
+   - Switch between Ethereum Mainnet and Solana Mainnet views by selecting the corresponding network button (requires connecting a wallet of that chain type).
+   - Disconnect your wallet if needed.
+5. **Refresh Data**: Click the "Refresh Data" button to update your balance and transaction history in real-time.

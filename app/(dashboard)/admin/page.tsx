@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import GlassCard from "@/components/ui/glass/GlassCard";
@@ -12,7 +12,7 @@ interface AdminStats {
 }
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [error, setError] = useState("");
@@ -73,17 +73,17 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold mb-4 text-[var(--glass-text)]">System Overview</h2>
             {stats ? (
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-500/20 border border-blue-400/30 p-4 rounded-lg text-center">
-                  <div className="text-3xl font-bold text-blue-800 dark:text-blue-200">
+                <div className="glass-card p-4 rounded-lg text-center">
+                  <div className="text-3xl font-bold text-[var(--glass-text)]">
                     {stats.totalUsers}
                   </div>
-                  <div className="text-sm text-blue-900/70 dark:text-blue-100/70">Total Users</div>
+                  <div className="text-sm glass-text-muted">Total Users</div>
                 </div>
-                <div className="bg-purple-500/20 border border-purple-400/30 p-4 rounded-lg text-center">
-                  <div className="text-3xl font-bold text-purple-800 dark:text-purple-200">
+                <div className="glass-card p-4 rounded-lg text-center">
+                  <div className="text-3xl font-bold text-[var(--glass-text)]">
                     {stats.totalListings}
                   </div>
-                  <div className="text-sm text-purple-900/70 dark:text-purple-100/70">Active Listings</div>
+                  <div className="text-sm glass-text-muted">Active Listings</div>
                 </div>
               </div>
             ) : (

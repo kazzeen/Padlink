@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -33,7 +33,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfileForm() {
-  const { data: session } = useSession();
+  const { data: session } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -121,7 +121,9 @@ export default function ProfileForm() {
     if (session?.user?.id) {
       fetchProfile();
     }
-  }, [session, reset]);
+    // Only re-run if user ID changes, not on every session object reference change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, reset]);
 
   useEffect(() => {
     // Prefetch dashboard for faster transition
