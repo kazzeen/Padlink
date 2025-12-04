@@ -32,7 +32,7 @@ jest.mock("react", () => {
   const originalReact = jest.requireActual("react");
   return {
     ...originalReact,
-    use: (promise: Promise<any>) => {
+    use: (promise: Promise<unknown>) => {
       if (promise instanceof Promise) {
         // Very basic unwrap for test purposes if needed, 
         // but usually we can just return the value if we mock the prop directly as a value 

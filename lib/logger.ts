@@ -1,7 +1,7 @@
 type LogLevel = "info" | "warn" | "error";
 
 export const logger = {
-  log: async (level: LogLevel, message: string, context?: Record<string, any>) => {
+  log: async (level: LogLevel, message: string, context?: Record<string, unknown>) => {
     // Always log to console in development
     if (process.env.NODE_ENV === "development") {
       switch (level) {
@@ -38,7 +38,7 @@ export const logger = {
     }
   },
 
-  info: (message: string, context?: Record<string, any>) => logger.log("info", message, context),
-  warn: (message: string, context?: Record<string, any>) => logger.log("warn", message, context),
-  error: (message: string, context?: Record<string, any>) => logger.log("error", message, context),
+  info: (message: string, context?: Record<string, unknown>) => logger.log("info", message, context),
+  warn: (message: string, context?: Record<string, unknown>) => logger.log("warn", message, context),
+  error: (message: string, context?: Record<string, unknown>) => logger.log("error", message, context),
 };

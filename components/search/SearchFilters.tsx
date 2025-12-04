@@ -6,7 +6,7 @@ import GlassInput from "@/components/ui/glass/GlassInput";
 import { useDebounce } from "@/lib/hooks/useDebounce"; // We'll create this hook
 
 interface SearchFiltersProps {
-  onFilterChange: (filters: unknown) => void;
+  onFilterChange: (filters: Record<string, unknown>) => void;
 }
 
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {

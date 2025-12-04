@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
         const { payload } = await jwtVerify(padlinkSession, key);
         isAuthenticated = true;
         userRole = (payload.role as string) || "USER";
-      } catch (error) {
+      } catch {
         // Invalid token
       }
     }

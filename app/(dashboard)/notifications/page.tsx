@@ -19,7 +19,7 @@ interface Notification {
 }
 
 export default function NotificationsPage() {
- const { data: session, status } = useAuth(); // useAuth returns data as session
+  const { status } = useAuth();
   const { mutate } = useSWRConfig();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);

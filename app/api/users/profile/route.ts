@@ -3,12 +3,17 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 // Define validation schema matching the frontend
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
-  age: z.number().min(18).max(120).optional(),
-  avatar: z.string().url().optional().or(z.literal("")),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional().nullable(),
+  age: z.number().min(18).max(120).optional().nullable(),
+  avatar: z.string().refine((val) => {
+    if (!val) return true;
+    return val.startsWith("/") || /^(http|https):\/\//.test(val);
+  }, "Must be a valid URL or path").optional().nullable(),
   preferences: z.object({
     minBudget: z.number().min(0),
     maxBudget: z.number().min(0),
@@ -82,13 +87,21 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user profile
+    console.log("Updating user profile for:", session.user.id);
+    console.log("Validated data:", JSON.stringify(validatedData, null, 2));
+    
+    // Explicitly log avatar update intent
+    const newAvatar = validatedData.avatar || null;
+    console.log("Setting avatar to:", newAvatar);
+
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         name: validatedData.name,
         age: validatedData.age,
         bio: validatedData.bio,
-        avatar: validatedData.avatar,
+        avatar: newAvatar, 
+        image: newAvatar, // Sync image with avatar
         preferences: validatedData.preferences ? {
           upsert: {
             create: {
@@ -130,11 +143,12 @@ export async function PUT(request: NextRequest) {
       include: { preferences: true },
     });
 
+    console.log("User updated successfully");
     return NextResponse.json(updatedUser);
   } catch (error) {
     console.error("Profile update error:", error);
     return NextResponse.json(
-      { error: "Failed to update profile" },
+      { error: "Failed to update profile", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

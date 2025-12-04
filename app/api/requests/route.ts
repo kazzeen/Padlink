@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createNotification } from "@/lib/notifications";
+import { Prisma } from "@prisma/client";
 
 const requestSchema = z.object({
   receiverId: z.string().min(1, "Receiver ID is required"),
@@ -117,7 +118,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(request || null);
     }
 
-    let whereClause: any = {};
+    let whereClause: Prisma.RequestWhereInput = {};
 
     if (type === "sent") {
       whereClause = { senderId: session.user.id };

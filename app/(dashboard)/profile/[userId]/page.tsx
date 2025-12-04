@@ -84,7 +84,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
             <div className="relative h-32 w-32 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden bg-gray-200">
               {user.avatar || user.image ? (
                 <Image
-                  src={user.avatar || user.image}
+                  src={(user.avatar || user.image) ?? ""}
                   alt={user.name || "Profile"}
                   fill
                   className="object-cover"

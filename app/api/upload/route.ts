@@ -1,5 +1,4 @@
 import { getSession } from "@/lib/session";
-import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -13,6 +12,14 @@ const MIME_TYPE_MAP: Record<string, string> = {
   "image/webp": "webp",
 };
 
+const UPLOAD_DIRS = {
+  property: "properties",
+  profile: "users/profiles",
+  roommate: "users/roommates",
+};
+
+type UploadType = keyof typeof UPLOAD_DIRS;
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
@@ -23,10 +30,20 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const type = (formData.get("type") as string) || "profile"; // Default to profile for backward compatibility
 
     if (!file) {
       logger.warn("Upload attempt without file", { userId: session.user.id });
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    // Validate type
+    if (!Object.keys(UPLOAD_DIRS).includes(type)) {
+      logger.warn("Invalid upload type", { userId: session.user.id, type });
+      return NextResponse.json(
+        { error: "Invalid upload type. Allowed: property, profile, roommate" },
+        { status: 400 }
+      );
     }
 
     // Validate file type
@@ -53,8 +70,9 @@ export async function POST(req: NextRequest) {
     const extension = MIME_TYPE_MAP[file.type] || "bin";
     const filename = `${uuidv4()}.${extension}`;
     
-    // Store locally in public/uploads
-    const uploadDir = path.join(process.cwd(), "public/uploads");
+    // Determine storage directory
+    const subDir = UPLOAD_DIRS[type as UploadType];
+    const uploadDir = path.join(process.cwd(), "public/uploads", subDir);
     
     // Ensure directory exists
     try {
@@ -68,18 +86,19 @@ export async function POST(req: NextRequest) {
     
     await writeFile(filePath, buffer);
     
-    const fileUrl = `/uploads/${filename}`;
+    // Construct URL with subdirectories
+    // Note: Windows uses backslashes, but URLs must use forward slashes
+    const fileUrl = `/uploads/${subDir}/${filename}`.replace(/\\/g, "/");
 
-    // Update user profile with new avatar URL
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { 
-        avatar: fileUrl,
-        image: fileUrl // Update standard NextAuth image field too
-      },
+    logger.info("File uploaded successfully", { 
+      userId: session.user.id, 
+      filename, 
+      type,
+      size: file.size 
     });
 
-    logger.info("File uploaded successfully", { userId: session.user.id, filename, size: file.size });
+    // NOTE: We no longer automatically update the user profile here.
+    // The client is responsible for associating the returned URL with the correct entity (User or Listing).
 
     return NextResponse.json({ url: fileUrl }, { status: 201 });
   } catch (error) {

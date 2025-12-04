@@ -12,7 +12,7 @@ export interface DBUser {
   image?: string | null;
   avatar?: string | null;
   role: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export function useAuth() {

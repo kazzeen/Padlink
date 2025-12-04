@@ -147,7 +147,7 @@ describe("RequestsPage", () => {
     });
 
     // Simulate click on the grid container but targeting the card
-    const grid = screen.getByTestId("received-requests-grid");
+    // const grid = screen.getByTestId("received-requests-grid"); // unused
     const card = screen.getByTestId("request-card-user1");
     
     // We need to simulate bubbling manually if we fire on grid? 

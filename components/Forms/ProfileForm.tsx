@@ -1,36 +1,16 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { profileSchema, ProfileFormData } from "@/lib/schemas";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { logger } from "@/lib/logger";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import GlassInput from "@/components/ui/glass/GlassInput";
 import ImageUpload from "@/components/ui/ImageUpload";
-
-const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
-  age: z.number().min(18).max(120).optional(),
-  avatar: z.string().url().optional().or(z.literal("")),
-  preferences: z.object({
-    minBudget: z.number().min(0),
-    maxBudget: z.number().min(0),
-    preferredCities: z.string().min(2, "Please enter at least one city"), // We'll parse this comma-separated string
-    commutDistance: z.number().min(0),
-    sleepSchedule: z.enum(["early_bird", "night_owl", "flexible"]),
-    cleanlinesLevel: z.number().min(1).max(5),
-    socialPreference: z.enum(["introvert", "extrovert", "ambivert"]),
-    smokingStatus: z.enum(["non_smoker", "smoker", "okay_with_smoker"]),
-  }),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfileForm() {
   const { data: session } = useAuth();
@@ -40,16 +20,36 @@ export default function ProfileForm() {
   const [message, setMessage] = useState("");
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
 
+  const lastValidationErrors = useRef<FieldErrors<ProfileFormData> | null>(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    getValues, // Add getValues
+    getValues,
+    setValue,
+    setError,
   } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
+    resolver: async (data, context, options) => {
+      // Debug logging wrapper for the resolver
+      console.log("Form Data being validated:", data);
+      const result = await zodResolver(profileSchema)(data, context, options);
+      console.log("Resolver Result:", result);
+      
+      if (Object.keys(result.errors).length > 0) {
+        lastValidationErrors.current = result.errors;
+      } else {
+        lastValidationErrors.current = null;
+      }
+      
+      return result;
+    },
     defaultValues: {
       name: session?.user?.name || "",
+      bio: "",
+      age: undefined,
+      avatar: "",
       preferences: {
         minBudget: 0,
         maxBudget: 2000,
@@ -64,10 +64,7 @@ export default function ProfileForm() {
   });
 
   const handleImageUpload = (url: string) => {
-    reset((formValues) => ({
-      ...formValues,
-      avatar: url,
-    }));
+    setValue("avatar", url, { shouldDirty: true, shouldValidate: true });
   };
 
   useEffect(() => {
@@ -82,9 +79,13 @@ export default function ProfileForm() {
              // Parse cities if it's a JSON string, otherwise leave as is (though it should be a string in DB)
             let citiesStr = "";
             try {
-                const parsed = JSON.parse(data.preferences.preferredCities);
-                if (Array.isArray(parsed)) citiesStr = parsed.join(", ");
-                else citiesStr = String(parsed);
+                if (!data.preferences.preferredCities) {
+                    citiesStr = "";
+                } else {
+                    const parsed = JSON.parse(data.preferences.preferredCities);
+                    if (Array.isArray(parsed)) citiesStr = parsed.join(", ");
+                    else citiesStr = String(parsed || "");
+                }
             } catch {
                 citiesStr = data.preferences.preferredCities || "";
             }
@@ -99,6 +100,7 @@ export default function ProfileForm() {
             name: data.name || "",
             age: data.age,
             bio: data.bio,
+            avatar: data.avatar || "",
             preferences: formattedPreferences || {
                 minBudget: 0,
                 maxBudget: 2000,
@@ -122,29 +124,37 @@ export default function ProfileForm() {
       fetchProfile();
     }
     // Only re-run if user ID changes, not on every session object reference change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, reset]);
 
   useEffect(() => {
-    // Prefetch dashboard for faster transition
-    router.prefetch("/dashboard");
-
-    let timer: NodeJS.Timeout;
-    if (redirectCountdown !== null && redirectCountdown > 0) {
-      timer = setTimeout(() => {
-        setRedirectCountdown(redirectCountdown - 1);
-      }, 1000);
-    } else if (redirectCountdown === 0) {
-      router.push("/dashboard");
+    if (redirectCountdown === null) return;
+    
+    if (redirectCountdown === 0) {
+      // Use window.location.href for a full page reload to update session state in parent components
+      window.location.href = "/dashboard";
+      return;
     }
+
+    const timer = setTimeout(() => {
+      setRedirectCountdown((prev) => (prev !== null ? prev - 1 : null));
+    }, 1000);
+
     return () => clearTimeout(timer);
   }, [redirectCountdown, router]);
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
     setMessage("");
+    console.log("Starting profile submission...", data);
+
     try {
-      // Process cities string into array
+      // Transform array to comma-separated string if needed for internal logic,
+      // but actually the backend expects an array for preferredCities now?
+      // Let's double check the API route. 
+      // API route schema: preferredCities: z.array(z.string())
+      // So we send the array directly.
+
+      // Ensure preferredCities is an array of strings (not empty strings)
       const citiesArray = data.preferences.preferredCities
         .split(",")
         .map((c) => c.trim())
@@ -154,9 +164,11 @@ export default function ProfileForm() {
         ...data,
         preferences: {
             ...data.preferences,
-            preferredCities: citiesArray, // Send as array, API will stringify
+            preferredCities: citiesArray, 
         }
       };
+
+      console.log("Sending payload to API:", JSON.stringify(payload, null, 2));
 
       const response = await fetch("/api/users/profile", {
         method: "PUT",
@@ -164,28 +176,100 @@ export default function ProfileForm() {
         body: JSON.stringify(payload),
       });
 
+      console.log("API Response status:", response.status);
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log("Profile updated successfully:", responseData);
         setMessage("Profile updated successfully!");
         setRedirectCountdown(3); // Start countdown
+        // We will handle the reload/redirect in the useEffect for countdown
       } else {
         const errData = await response.json();
-        const errorMsg = errData.error || "Failed to update profile";
-        setMessage(errorMsg);
-        logger.error("Profile update failed", { error: errorMsg, validationDetails: errData.details });
+        console.error("API Error:", errData);
+        setMessage(`Error: ${errData.error || "Failed to update profile"}`);
       }
     } catch (error) {
-      setMessage("An error occurred. Please try again.");
-      logger.error("Profile update exception", { error: error instanceof Error ? error.message : String(error) });
+      console.error("Submission error:", error);
+      setMessage("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onError = (errors: FieldErrors<ProfileFormData>) => {
+    let effectiveErrors = errors;
+    
+    // Fallback to captured errors if RHF errors are empty but we captured some in resolver
+    if (Object.keys(errors).length === 0 && lastValidationErrors.current && Object.keys(lastValidationErrors.current).length > 0) {
+        console.warn("RHF errors empty, using captured errors from resolver");
+        effectiveErrors = lastValidationErrors.current;
+        
+        // Manually set errors on the form to ensure UI updates
+        (Object.keys(lastValidationErrors.current) as Array<keyof ProfileFormData>).forEach((key) => {
+            const err = lastValidationErrors.current![key];
+            // Handle nested errors (e.g. preferences.preferredCities)
+            if (key === 'preferences' && err) {
+                 Object.keys(err).forEach(subKey => {
+                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                     if ((err as any)[subKey]) {
+                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                         setError(`preferences.${subKey}` as any, (err as any)[subKey]);
+                     }
+                 });
+            } else {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setError(key as any, err!);
+            }
+        });
+    }
+
+    console.error("Validation Errors (Raw):", effectiveErrors);
+    
+    // Log values for fields with errors to help debugging
+    if (effectiveErrors.avatar) {
+        console.error("Avatar Validation Error:", {
+            message: effectiveErrors.avatar.message,
+            type: effectiveErrors.avatar.type,
+            value: getValues("avatar"),
+            error: effectiveErrors.avatar
+        });
+    }
+    
+    // Helper to safely extract error messages recursively
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getSafeErrors = (errs: any): any => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result: any = {};
+      Object.keys(errs).forEach((key) => {
+        const value = errs[key];
+        if (value && typeof value === "object") {
+          if ("message" in value && typeof value.message === "string") {
+            // It's a field error
+            result[key] = value.message;
+          } else if (key !== "ref") {
+            // It's likely a nested group (e.g. preferences)
+            const nested = getSafeErrors(value);
+            if (Object.keys(nested).length > 0) {
+              result[key] = nested;
+            }
+          }
+        }
+      });
+      return result;
+    };
+
+    const safeErrors = getSafeErrors(effectiveErrors);
+    console.error("Validation Errors (Safe):", safeErrors);
+    
+    setMessage("Please correct the errors in the form.");
   };
 
   if (isFetching) return <div className="text-[var(--glass-text)] text-center text-lg">Loading profile...</div>;
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onError)}
       className="space-y-8 max-w-2xl mx-auto"
     >
       <GlassCard className="space-y-6">
@@ -217,10 +301,11 @@ export default function ProfileForm() {
           />
 
           <div>
-            <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">
+            <label htmlFor="bio" className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">
               Bio
             </label>
             <textarea
+              id="bio"
               {...register("bio")}
               className="glass-input w-full px-4 py-3 rounded-xl transition-all duration-200 placeholder-gray-500 dark:placeholder-white/40 focus:border-gray-400 dark:focus:border-white/60 focus:outline-none focus:shadow-[0_0_10px_rgba(255,255,255,0.1)]"
               placeholder="Tell us about yourself"

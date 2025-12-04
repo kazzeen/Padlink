@@ -7,9 +7,10 @@ import GlassButton from "@/components/ui/glass/GlassButton";
 interface ImageUploadProps {
   currentImage?: string | null;
   onUploadComplete: (url: string) => void;
+  type?: "property" | "profile" | "roommate";
 }
 
-export default function ImageUpload({ currentImage, onUploadComplete }: ImageUploadProps) {
+export default function ImageUpload({ currentImage, onUploadComplete, type = "profile" }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(currentImage || null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -52,6 +53,7 @@ export default function ImageUpload({ currentImage, onUploadComplete }: ImageUpl
       // Upload
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("type", type);
 
       try {
         const res = await fetch("/api/upload", {

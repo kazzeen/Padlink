@@ -140,9 +140,12 @@ model Listing {
   zipCode   String
   
   // Property details
+  propertyType String? // "Apartment", "House", "Condo", etc.
   roomType  String // "private", "shared"
   bedrooms  Int
   bathrooms Int
+  sqft      Int?
+  maxOccupants Int?
   
   // Rental info
   rentAmount Float

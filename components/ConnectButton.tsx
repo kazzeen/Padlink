@@ -11,7 +11,7 @@ interface ConnectButtonProps {
   onConnect?: () => void;
 }
 
-export default function ConnectButton({ receiverId, receiverName, initialStatus = "NONE", onConnect }: ConnectButtonProps) {
+export default function ConnectButton({ receiverId, initialStatus = "NONE", onConnect }: ConnectButtonProps) {
   const { request, isLoading: isCheckingStatus, mutate } = useConnectionStatus(receiverId);
   const [isSending, setIsSending] = useState(false);
 

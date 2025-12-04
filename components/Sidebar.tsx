@@ -30,6 +30,7 @@ export default function Sidebar() {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: "📊" },
+    { name: "Property Listings", href: "/listings", icon: "🏠" },
     { name: "Browse", href: "/browse", icon: "🔍" },
     { name: "Matches", href: "/matches", icon: "🧩" },
     { name: "Requests", href: "/requests", icon: "📩" },

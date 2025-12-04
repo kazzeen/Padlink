@@ -5,6 +5,7 @@ import Link from "next/link";
 import ProfileForm from "@/components/Forms/ProfileForm";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
+import MyListings from "@/components/listings/MyListings";
 
 export default function DashboardPage() {
   const { data: session, status } = useAuth();
@@ -76,6 +77,10 @@ export default function DashboardPage() {
               </div>
             </div>
           </GlassCard>
+        </div>
+
+        <div className="mt-8">
+          <MyListings />
         </div>
       </div>
     </div>

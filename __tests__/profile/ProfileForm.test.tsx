@@ -26,15 +26,15 @@ describe("ProfileForm input and submission", () => {
         return Promise.resolve({
           ok: true,
           json: async () => ({ name: "", preferences: null }),
-        }) as any;
+        }) as unknown as Promise<Response>;
       }
       if (typeof url === "string" && url.includes("/api/users/profile") && init?.method === "PUT") {
         return Promise.resolve({
           ok: true,
           json: async () => ({ success: true }),
-        }) as any;
+        }) as unknown as Promise<Response>;
       }
-      return Promise.resolve({ ok: false, json: async () => ({}) }) as any;
+      return Promise.resolve({ ok: false, json: async () => ({}) }) as unknown as Promise<Response>;
     });
   });
 
@@ -63,5 +63,28 @@ describe("ProfileForm input and submission", () => {
       const calls = (global.fetch as jest.Mock).mock.calls;
       expect(calls.some(([url, init]) => typeof url === "string" && url.includes("/api/users/profile") && (init as RequestInit)?.method === "PUT")).toBe(true);
     });
+  });
+
+  it("shows validation errors when submitting invalid data", async () => {
+    render(<ProfileForm />);
+
+    await waitFor(() => expect(screen.queryByText(/Loading profile/i)).toBeNull());
+
+    // Name is "Test User" (valid) from mock.
+    // Preferred Cities is empty (invalid).
+
+    const saveButton = screen.getByRole("button", { name: /save profile/i });
+    fireEvent.click(saveButton);
+
+    // Expect validation error message for cities
+    expect(await screen.findByText(/Please enter at least one city/i)).toBeInTheDocument();
+
+    // Expect NO API call
+    const calls = (global.fetch as jest.Mock).mock.calls;
+    // Filter for PUT calls
+    const putCalls = calls.filter(([url, init]) => 
+      typeof url === "string" && url.includes("/api/users/profile") && (init as RequestInit)?.method === "PUT"
+    );
+    expect(putCalls.length).toBe(0);
   });
 });

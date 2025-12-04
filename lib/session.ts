@@ -41,10 +41,10 @@ export async function getSession(): Promise<Session | null> {
         role: payload.role as string,
         email: payload.email as string,
         name: payload.name as string,
-        image: payload.image as string
+        image: payload.image as string// ...
       }
     };
-  } catch (error) {
+  } catch {
     // Token invalid or expired
     return null;
   }

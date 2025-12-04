@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { PrivyClient } = require('@privy-io/server-auth');
 const fs = require('fs');
 const path = require('path');

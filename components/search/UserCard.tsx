@@ -28,7 +28,7 @@ export default function UserCard({ user }: UserCardProps) {
       <div className="relative h-48 w-full bg-white/5">
         {user.avatar || user.image ? (
           <Image
-            src={user.avatar || user.image}
+            src={(user.avatar || user.image) ?? ""}
             alt={user.name || "User"}
             fill
             className="object-cover"

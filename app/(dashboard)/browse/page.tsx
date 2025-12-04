@@ -62,6 +62,10 @@ export default function BrowsePage() {
     fetchUsers(filters, 1);
   }, [filters, fetchUsers]);
 
+  const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
+    setFilters(newFilters);
+  }, []);
+
   const handlePageChange = (newPage: number) => {
     fetchUsers(filters, newPage);
   };
@@ -78,7 +82,7 @@ export default function BrowsePage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Sidebar: Filters */}
         <div className="lg:col-span-1">
-          <SearchFilters onFilterChange={setFilters} />
+          <SearchFilters onFilterChange={handleFilterChange} />
         </div>
 
         {/* Right Content: Grid */}
