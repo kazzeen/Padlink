@@ -24,6 +24,7 @@ interface Transaction {
   status: string;
   timestamp: string;
   hash: string;
+  memo?: string;
 }
 
 export default function WalletPage() {
@@ -69,6 +70,29 @@ export default function WalletPage() {
     setTransactions([]);
     
     try {
+      let internalTxs: Transaction[] = [];
+      // Fetch Internal Transactions first (faster, more reliable metadata)
+      try {
+        const internalRes = await fetch('/api/wallet/transactions');
+        if (internalRes.ok) {
+            const data = await internalRes.json();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            internalTxs = data.transactions.map((tx: any) => ({
+                id: tx.id,
+                type: 'Transfer',
+                amount: `${tx.amount} ${tx.currency}`,
+                counterparty: tx.senderId === tx.receiverId ? 'Self' : (tx.sender ? `From: ${tx.sender.name}` : `To: ${tx.receiver.name}`),
+                status: tx.status,
+                timestamp: tx.createdAt,
+                hash: tx.txHash || "",
+                memo: tx.memo
+            }));
+            setTransactions(internalTxs);
+        }
+      } catch (e) {
+        console.error("Failed to fetch internal transactions", e);
+      }
+
       if (activeWallet.chainType === 'ethereum') {
         setCurrency("ETH");
         // 1. Fetch Balance (Ethereum)
@@ -104,27 +128,38 @@ export default function WalletPage() {
            }
         }
 
-        // 2. Fetch Transactions (Ethereum Mainnet only)
-        const chainId = activeWallet.chainId?.split(':')[1] || '1'; // Default to mainnet for read-only logic if needed
-        let apiUrl = "";
-        if (chainId === "1") apiUrl = "https://api.etherscan.io/api";
-        
-        if (apiUrl) {
-          const res = await fetch(`${apiUrl}?module=account&action=txlist&address=${activeWallet.address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=YourApiKeyToken`);
-          const data = await res.json();
-          if (data.status === "1" && Array.isArray(data.result)) {
-            setTransactions(data.result.map((tx: { hash: string; from: string; value: string; to: string; isError: string; timeStamp: string }) => ({
-              id: tx.hash,
-              type: tx.from.toLowerCase() === activeWallet.address.toLowerCase() ? "Outgoing" : "Incoming",
-              amount: `${(Number(tx.value) / 1e18).toFixed(4)} ETH`,
-              counterparty: tx.from.toLowerCase() === activeWallet.address.toLowerCase() ? (tx.to || "") : tx.from,
-              status: tx.isError === "0" ? "Confirmed" : "Failed",
-              timestamp: new Date(Number(tx.timeStamp) * 1000).toISOString(),
-              hash: tx.hash,
-            })));
-          } else if (data.message === "No transactions found") {
-             setTransactions([]);
-          }
+        // 2. Fetch Transactions (Etherscan via Proxy)
+        try {
+            const res = await fetch('/api/ethereum', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'transactions', address: activeWallet.address })
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              if (data.status === "1" && Array.isArray(data.result)) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const onChainTxs = data.result.map((tx: any) => ({
+                  id: tx.hash,
+                  type: tx.from.toLowerCase() === activeWallet.address.toLowerCase() ? "Outgoing" : "Incoming",
+                  amount: `${(Number(tx.value) / 1e18).toFixed(4)} ETH`,
+                  counterparty: tx.from.toLowerCase() === activeWallet.address.toLowerCase() ? (tx.to || "") : tx.from,
+                  status: tx.isError === "0" ? "Confirmed" : "Failed",
+                  timestamp: new Date(Number(tx.timeStamp) * 1000).toISOString(),
+                  hash: tx.hash,
+                }));
+
+                // Merge with internalTxs, avoiding duplicates by hash
+                setTransactions(prev => {
+                    const seenHashes = new Set(prev.map(t => t.hash));
+                    const newTxs = onChainTxs.filter((t: Transaction) => !seenHashes.has(t.hash));
+                    return [...prev, ...newTxs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                });
+              }
+            }
+        } catch (e) {
+            console.error("Eth tx fetch error", e);
         }
       } else if (activeWallet.chainType === 'solana') {
         setCurrency("SOL");
@@ -271,6 +306,11 @@ export default function WalletPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl sm:text-3xl font-bold text-[var(--glass-text)]">Wallet Account</h1>
         <div className="flex items-center gap-4">
+          <Link href="/wallet/transfer">
+             <GlassButton size="sm" className="bg-blue-600 hover:bg-blue-700 border-none">
+               Transfer Funds
+             </GlassButton>
+          </Link>
           <GlassButton size="sm" variant="secondary" onClick={fetchWalletData} disabled={loadingBalance}>
             {loadingBalance ? "Refreshing..." : "Refresh Data"}
           </GlassButton>
@@ -346,29 +386,45 @@ export default function WalletPage() {
                        {tx.type === 'Incoming' ? '↓' : '↑'}
                      </div>
                      <div>
-                       <div className="font-medium text-[var(--glass-text)]">{tx.type}</div>
+                       <div className="font-medium text-[var(--glass-text)]">
+                         {tx.counterparty && tx.counterparty !== 'Self' && tx.counterparty.length < 20 ? tx.counterparty : tx.type}
+                       </div>
                        <div className="text-xs text-[var(--glass-text-muted)]">{new Date(tx.timestamp).toLocaleDateString()}</div>
                      </div>
                    </div>
                    <div className="text-right">
                      <div className="font-medium text-[var(--glass-text)]">{tx.amount}</div>
-                     <div className={`text-xs ${tx.status === 'Confirmed' ? 'text-green-400' : 'text-yellow-400'}`}>
+                     <div className={`text-xs ${tx.status === 'Confirmed' || tx.status === 'COMPLETED' ? 'text-green-400' : 'text-yellow-400'}`}>
                        {tx.status}
                      </div>
                    </div>
                  </div>
                  
                  {expandedTx === tx.id && (
-                   <div className="px-4 pb-4 pt-0 text-sm bg-black/5 dark:bg-black/20">
+                   <div className="px-4 pb-4 pt-0 text-sm bg-black/5 dark:bg-black/20 animate-in slide-in-from-top-2">
                      <div className="grid grid-cols-2 gap-2 py-2 text-[var(--glass-text-muted)]">
                        <div>Hash:</div>
-                       <div className="font-mono text-[var(--glass-text)] truncate">{tx.hash}</div>
+                       <div className="font-mono text-[var(--glass-text)] truncate">
+                          <a 
+                            href={`https://etherscan.io/tx/${tx.hash}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:underline"
+                          >
+                            {tx.hash || "Pending"}
+                          </a>
+                       </div>
                        <div>From/To:</div>
                        <div className="font-mono text-[var(--glass-text)] truncate">{tx.counterparty}</div>
                        <div>Time:</div>
                        <div className="text-[var(--glass-text)]">{new Date(tx.timestamp).toLocaleString()}</div>
+                       {tx.memo && (
+                         <>
+                            <div>Memo:</div>
+                            <div className="text-[var(--glass-text)] italic">{tx.memo}</div>
+                         </>
+                       )}
                      </div>
-                     <a href="#" className="text-blue-400 hover:underline text-xs">View on Explorer ↗</a>
                    </div>
                  )}
                </div>

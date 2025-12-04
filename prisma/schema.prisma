@@ -62,8 +62,87 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
+  // Transactions
+  sentTransactions     Transaction[] @relation("sender")
+  receivedTransactions Transaction[] @relation("receiver")
+  savedContacts        SavedContact[]
+  transferTemplates    TransferTemplate[]
+  scheduledTransfers   ScheduledTransfer[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  senderId  String
+  sender    User     @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId String
+  receiver  User     @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  amount    Float
+  currency  String   // "ETH", "SOL", "USDC"
+  txHash    String?  // Blockchain transaction hash
+  status    String   // "PENDING", "PROCESSING", "COMPLETED", "FAILED"
+  memo      String?
+  idempotencyKey String? @unique
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SavedContact {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name      String
+  address   String
+  chainType String   // "ethereum", "solana"
+  avatar    String?
+  
+  createdAt DateTime @default(now())
+}
+
+model TransferTemplate {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name      String
+  recipientAddress String
+  amount    Float?
+  currency  String
+  memo      String?
+  
+  createdAt DateTime @default(now())
+}
+
+model ScheduledTransfer {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  recipientAddress String
+  amount    Float
+  currency  String
+  memo      String?
+  
+  frequency String   // "DAILY", "WEEKLY", "MONTHLY"
+  nextRunAt DateTime
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  details   String   // JSON string
+  ipAddress String?
+  createdAt DateTime @default(now())
 }
 
 model Account {
