@@ -65,6 +65,7 @@ export default function TransferPage() {
   const [currency, setCurrency] = useState("ETH");
   const [memo, setMemo] = useState("");
   const [error, setError] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [txHash, setTxHash] = useState("");
   const [idempotencyKey, setIdempotencyKey] = useState("");
 
@@ -204,6 +205,7 @@ export default function TransferPage() {
         setProcessingStage("COMPLETED");
         await new Promise(resolve => setTimeout(resolve, 1000));
         setStep("SUCCESS");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
           console.error(err);
           setFailedStage(processingStage); // Mark current stage as failed

@@ -31,3 +31,20 @@
    - Switch between Ethereum Mainnet and Solana Mainnet views by selecting the corresponding network button (requires connecting a wallet of that chain type).
    - Disconnect your wallet if needed.
 5. **Refresh Data**: Click the "Refresh Data" button to update your balance and transaction history in real-time.
+
+## Exporting Your Embedded Wallet
+
+- You can export the private key for your embedded wallet multiple times without reloading the page. Each export attempt requires fresh authorization and the interface remains enabled after use.
+- Keys are never cached by the app. Export state is reset after each reveal to prevent data persistence.
+- Only embedded wallets created in the app can be exported. External wallets manage their own keys and typically do not reveal private keys.
+
+### How to Export
+- Open the Wallet page and select the desired network (Ethereum or Solana).
+- Click `Export Ethereum Private Key` or `Export Solana Private Key`.
+- Review the risk warning and click `Reveal Keys`.
+- After completion, you may repeat the process as needed; concurrent attempts are blocked to prevent accidental duplicates.
+
+### Security Guidelines
+- Verify your authorization on every export attempt; if your session expires, re-authenticate when prompted.
+- Do not store keys digitally. Write them down and keep them in a secure location.
+- Never share your keys with anyone or any support agent.

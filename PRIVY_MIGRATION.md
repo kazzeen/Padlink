@@ -46,6 +46,10 @@ NEXTAUTH_URL="http://localhost:3000"
 - **Headers**: `Authorization: Bearer <privy_access_token>`
 - **Response**: JSON object of the synchronized user.
 
+### `POST /api/wallet/export`
+- Wallet export initialization has no rate limit.
+- Requires `Authorization: Bearer <privy_access_token>`.
+
 ## Rollback Procedure
 
 If critical issues arise with Privy:

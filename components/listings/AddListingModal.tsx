@@ -9,6 +9,7 @@ import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import GlassInput from "@/components/ui/glass/GlassInput";
 import Image from "next/image";
+import { Listing } from "@/lib/types";
 
 type Step = "BASIC" | "SPECS" | "AMENITIES" | "LOCATION" | "DETAILS" | "IMAGES";
 
@@ -16,6 +17,7 @@ interface AddListingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialData?: Listing | null;
 }
 
 const AMENITIES_LIST = [
@@ -24,7 +26,7 @@ const AMENITIES_LIST = [
   "Wheelchair Access", "Pets Allowed", "Furnished", "Utilities Included"
 ];
 
-export default function AddListingModal({ isOpen, onClose, onSuccess }: AddListingModalProps) {
+export default function AddListingModal({ isOpen, onClose, onSuccess, initialData }: AddListingModalProps) {
   const [step, setStep] = useState<Step>("BASIC");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -37,6 +39,7 @@ export default function AddListingModal({ isOpen, onClose, onSuccess }: AddListi
     formState: { errors },
     setValue,
     watch,
+    reset,
   } = useForm<ListingFormData>({
     resolver: zodResolver(listingSchema),
     defaultValues: {
@@ -47,33 +50,70 @@ export default function AddListingModal({ isOpen, onClose, onSuccess }: AddListi
     },
   });
 
+  // Reset form when initialData changes or modal opens
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        // Edit Mode
+        reset({
+          title: initialData.title,
+          description: initialData.description || "",
+          propertyType: initialData.propertyType || "", // Handle potential nulls
+          roomType: initialData.roomType as "private" | "shared",
+          bedrooms: initialData.bedrooms,
+          bathrooms: initialData.bathrooms,
+          sqft: initialData.sqft || undefined,
+          maxOccupants: initialData.maxOccupants || undefined,
+          rentAmount: initialData.rentAmount,
+          moveInDate: new Date(initialData.moveInDate).toISOString().split('T')[0],
+          leaseTerm: initialData.leaseTerm,
+          address: initialData.address,
+          city: initialData.city,
+          state: initialData.state,
+          zipCode: initialData.zipCode,
+          amenities: initialData.amenities || [],
+          images: initialData.images || [],
+        });
+        setImages(initialData.images || []);
+      } else {
+        // Create Mode - check draft
+        const draft = localStorage.getItem("listing_draft");
+        if (draft) {
+          try {
+            const parsed = JSON.parse(draft);
+            reset(parsed);
+            setImages(parsed.images || []);
+          } catch (e) {
+            console.error("Failed to load draft", e);
+            reset({
+               roomType: "private",
+               amenities: [],
+               images: [],
+               moveInDate: new Date().toISOString().split('T')[0],
+            });
+          }
+        } else {
+             reset({
+               roomType: "private",
+               amenities: [],
+               images: [],
+               moveInDate: new Date().toISOString().split('T')[0],
+            });
+            setImages([]);
+        }
+      }
+    }
+  }, [isOpen, initialData, reset]);
+
   const watchedValues = watch();
   const debouncedValues = useDebounce(watchedValues, 1000);
 
-  // Load draft on mount
+  // Save draft on change (only in create mode)
   useEffect(() => {
-    const draft = localStorage.getItem("listing_draft");
-    if (draft) {
-      try {
-        const parsed = JSON.parse(draft);
-        Object.entries(parsed).forEach(([key, value]) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setValue(key as keyof ListingFormData, value as any);
-        });
-      } catch (e) {
-        console.error("Failed to load draft", e);
-      }
-    }
-  }, [setValue]);
-
-  // Save draft on change
-  useEffect(() => {
-    // Only save if we have some data and it's not just the defaults (heuristically)
-    // Or just save everything.
-    if (Object.keys(debouncedValues).length > 0) {
+    if (!initialData && Object.keys(debouncedValues).length > 0 && isOpen) {
       localStorage.setItem("listing_draft", JSON.stringify(debouncedValues));
     }
-  }, [debouncedValues]);
+  }, [debouncedValues, initialData, isOpen]);
 
   const selectedAmenities = watch("amenities") || [];
 
@@ -131,25 +171,36 @@ export default function AddListingModal({ isOpen, onClose, onSuccess }: AddListi
   };
 
   const onSubmit = async (data: ListingFormData) => {
+    if (initialData) {
+       // Confirm edit
+       if (!confirm("Are you sure you want to save these changes?")) return;
+    }
+
     setIsSubmitting(true);
     try {
-      const res = await fetch("/api/listings", {
-        method: "POST",
+      const url = initialData ? `/api/listings/${initialData.id}` : "/api/listings";
+      const method = initialData ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(JSON.stringify(errorData.error) || "Failed to create listing");
+        throw new Error(JSON.stringify(errorData.error) || "Failed to save listing");
       }
 
-      localStorage.removeItem("listing_draft");
+      if (!initialData) {
+          localStorage.removeItem("listing_draft");
+      }
+      
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Create listing error:", error);
-      alert("Failed to create listing. Please try again.");
+      console.error("Save listing error:", error);
+      alert("Failed to save listing. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -163,7 +214,9 @@ export default function AddListingModal({ isOpen, onClose, onSuccess }: AddListi
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <GlassCard className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-[var(--glass-text)]">List Your Place</h2>
+          <h2 className="text-2xl font-bold text-[var(--glass-text)]">
+            {initialData ? "Edit Listing" : "List Your Place"}
+          </h2>
           <button onClick={onClose} className="text-[var(--glass-text-muted)] hover:text-[var(--glass-text)]">
             ✕
           </button>

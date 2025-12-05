@@ -3,6 +3,7 @@ import Link from "next/link";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import { Listing } from "@/lib/types";
+import { Pencil, Trash2, Eye } from "lucide-react";
 
 type MyListingCardProps = {
   listing: Listing;
@@ -10,7 +11,6 @@ type MyListingCardProps = {
   onDelete?: (id: string) => void;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function MyListingCard({ listing, onEdit, onDelete }: MyListingCardProps) {
   const mainImage = listing.images && listing.images.length > 0 ? listing.images[0] : "/placeholder-house.jpg";
   
@@ -53,21 +53,35 @@ export default function MyListingCard({ listing, onEdit, onDelete }: MyListingCa
         
         <div className="mt-auto pt-3 border-t border-[var(--glass-border)] flex justify-between items-center gap-2">
            <Link href={`/listings/${listing.id}`} className="flex-1">
-            <GlassButton size="sm" variant="secondary" className="w-full text-xs px-2 py-1">
-              View
+            <GlassButton size="sm" variant="secondary" className="w-full text-xs px-2 py-1 flex items-center justify-center gap-1">
+              <Eye className="w-3 h-3" /> View
             </GlassButton>
           </Link>
-          {/* 
-          <GlassButton 
-            size="sm" 
-            variant="primary" 
-            className="flex-1 text-xs px-2 py-1"
-            onClick={() => onEdit && onEdit(listing)}
-          >
-            Edit
-          </GlassButton>
-          */}
-          {/* Delete button can be added here */}
+          
+          {onEdit && (
+            <GlassButton 
+              size="sm" 
+              variant="primary" 
+              className="flex-1 text-xs px-2 py-1 flex items-center justify-center gap-1"
+              onClick={() => onEdit(listing)}
+            >
+              <Pencil className="w-3 h-3" /> Edit
+            </GlassButton>
+          )}
+
+          {onDelete && (
+             <GlassButton 
+              size="sm" 
+              className="flex-1 text-xs px-2 py-1 bg-red-500/20 hover:bg-red-500/40 text-red-400 border-red-500/50 flex items-center justify-center gap-1"
+              onClick={() => {
+                if (confirm("Are you sure you want to delete this listing? This action cannot be undone.")) {
+                  onDelete(listing.id);
+                }
+              }}
+            >
+              <Trash2 className="w-3 h-3" /> Delete
+            </GlassButton>
+          )}
         </div>
       </div>
     </GlassCard>

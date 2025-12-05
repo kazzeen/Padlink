@@ -16,6 +16,7 @@ const config: Config = {
     // Handle module aliases (this will be automatically configured for you soon)
     '^@/(.*)$': '<rootDir>/$1',
   },
+  moduleDirectories: ['node_modules', '<rootDir>'],
   transformIgnorePatterns: [
     '/node_modules/(?!(@auth|@prisma|@privy-io|@solana|jose|uuid)/)',
   ],

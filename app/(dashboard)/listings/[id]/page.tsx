@@ -4,9 +4,19 @@ import { useParams, useRouter } from "next/navigation";
 import useSWR from "swr";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import { useState, useEffect } from "react";
+
+const Map = dynamic(() => import("@/components/ui/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center bg-gray-800/20 animate-pulse">
+      <span className="text-[var(--glass-text-muted)]">Loading map...</span>
+    </div>
+  ),
+});
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -188,12 +198,13 @@ export default function ListingDetailsPage() {
 
           <GlassCard className="p-6">
             <h3 className="text-xl font-semibold mb-4">Location</h3>
-            <div className="h-64 rounded-xl bg-gray-800 flex items-center justify-center border border-[var(--glass-border)] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=New+York&zoom=13&size=600x300&sensor=false&key=YOUR_API_KEY_HERE')] bg-cover bg-center opacity-50 grayscale group-hover:grayscale-0 transition-all" />
-              <div className="z-10 text-center">
-                <p className="text-lg font-semibold">📍 Map Location</p>
-                <p className="text-xs text-[var(--glass-text-muted)]">Visualization Only</p>
-              </div>
+            <div className="h-[300px] w-full rounded-xl overflow-hidden border border-[var(--glass-border)] relative z-0">
+              <Map 
+                address={listing.address}
+                city={listing.city}
+                state={listing.state}
+                zipCode={listing.zipCode}
+              />
             </div>
           </GlassCard>
         </div>

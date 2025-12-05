@@ -60,6 +60,53 @@
   --text-stroke-color: rgba(0, 0, 0, 0.8); /* Keep strong stroke for white text */
 }
 
+/* Glass Icon Styling System */
+.glass-icon-container {
+  @apply relative flex items-center justify-center overflow-hidden transition-all duration-300;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass-icon-container {
+  background: rgba(30, 30, 30, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.glass-icon-container:hover {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .glass-icon-container:hover {
+  background: rgba(40, 40, 40, 0.4);
+  box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Accessibility & Fallbacks */
+@supports not (backdrop-filter: blur(10px)) {
+  .glass-icon-container {
+    background: rgba(255, 255, 255, 0.9);
+  }
+  .dark .glass-icon-container {
+    background: rgba(30, 30, 30, 0.9);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .glass-icon-container {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid black;
+  }
+  .dark .glass-icon-container {
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid white;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

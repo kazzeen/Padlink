@@ -11,7 +11,7 @@ const templateSchema = z.object({
   memo: z.string().optional(),
 });
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,7 +9,19 @@ export default function Home() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Navbar Placeholder */}
       <nav className="glass-panel flex items-center justify-between px-8 py-4 border-b border-[var(--glass-border)] sticky top-0 z-50">
-        <div className="text-2xl font-bold text-[var(--glass-text)] drop-shadow-lg">PadLink</div>
+        <div className="flex items-center gap-3">
+          <div className="glass-icon-container w-12 h-12 rounded-full p-1">
+            <Image 
+              src="/images/logo_transparent.png" 
+              alt="PadLink Logo - Connect with compatible roommates" 
+              width={32} 
+              height={32} 
+              className="object-contain"
+              priority
+            />
+          </div>
+          <div className="text-2xl font-bold text-[var(--glass-text)] drop-shadow-lg">PadLink</div>
+        </div>
         <div className="space-x-4 flex items-center">
           <ThemeToggle />
           <Link href="/login" className="text-[var(--glass-text)] opacity-80 hover:opacity-100 transition-colors font-medium">
@@ -54,7 +67,7 @@ export default function Home() {
       <section className="py-16 relative z-10">
         <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-8">
           <GlassCard className="p-8 flex flex-col items-center text-center" hoverEffect>
-            <div className="text-4xl mb-4 p-4 bg-black/5 dark:bg-white/10 rounded-full">🧩</div>
+            <div className="glass-icon-container text-4xl mb-4 w-20 h-20 rounded-full">🧩</div>
             <h3 className="text-xl font-bold mb-2 text-[var(--glass-text)]">Smart Matching</h3>
             <p className="text-[var(--glass-text-muted)]">
               Our algorithm matches you based on 20+ compatibility factors including sleep schedule, cleanliness, and social habits.
@@ -62,7 +75,7 @@ export default function Home() {
           </GlassCard>
           
           <GlassCard className="p-8 flex flex-col items-center text-center" hoverEffect>
-            <div className="text-4xl mb-4 p-4 bg-black/5 dark:bg-white/10 rounded-full">🔒</div>
+            <div className="glass-icon-container text-4xl mb-4 w-20 h-20 rounded-full">🔒</div>
             <h3 className="text-xl font-bold mb-2 text-[var(--glass-text)]">Verified Profiles</h3>
             <p className="text-[var(--glass-text-muted)]">
               Safety first. All users undergo identity verification so you can search with confidence.
@@ -70,7 +83,7 @@ export default function Home() {
           </GlassCard>
           
           <GlassCard className="p-8 flex flex-col items-center text-center" hoverEffect>
-            <div className="text-4xl mb-4 p-4 bg-black/5 dark:bg-white/10 rounded-full">💬</div>
+            <div className="glass-icon-container text-4xl mb-4 w-20 h-20 rounded-full">💬</div>
             <h3 className="text-xl font-bold mb-2 text-[var(--glass-text)]">In-App Chat</h3>
             <p className="text-[var(--glass-text-muted)]">
               Connect safely without sharing personal contact info until you&apos;re ready.

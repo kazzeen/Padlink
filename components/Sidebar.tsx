@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useNotificationCount } from "@/lib/hooks/useNotificationCount";
@@ -53,13 +54,24 @@ export default function Sidebar() {
     >
       <div className="flex items-center justify-between p-4 border-b border-[var(--glass-border)] h-16">
         {!isCollapsed && (
-          <span className="text-xl font-bold text-[var(--glass-text)] truncate drop-shadow-lg">
-            PadLink
-          </span>
+          <div className="flex items-center gap-3">
+            <div className="glass-icon-container w-10 h-10 rounded-full shrink-0">
+              <Image 
+                src="/images/logo_transparent.png" 
+                alt="PadLink Logo" 
+                width={28} 
+                height={28} 
+                className="object-contain"
+              />
+            </div>
+            <span className="text-xl font-bold text-[var(--glass-text)] truncate drop-shadow-lg">
+              PadLink
+            </span>
+          </div>
         )}
         <button
           onClick={toggleSidebar}
-          className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-[var(--glass-text)] opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors"
+          className="p-2 rounded-lg glass-icon-container hover:bg-black/5 dark:hover:bg-white/10 text-[var(--glass-text)] opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors w-8 h-8 flex items-center justify-center"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? "→" : "←"}
@@ -82,7 +94,9 @@ export default function Sidebar() {
                   title={isCollapsed ? item.name : ""}
                   aria-label={item.name}
                 >
-                  <span className="text-xl mr-3 drop-shadow-md" aria-hidden="true">{item.icon}</span>
+                  <span className="glass-icon-container w-8 h-8 rounded-full mr-3 text-xl shrink-0" aria-hidden="true">
+                    {item.icon}
+                  </span>
                   {!isCollapsed && (
                     <span className="font-medium truncate">{item.name}</span>
                   )}

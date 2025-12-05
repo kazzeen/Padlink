@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     // For this MVP, we assume we are sending to a User ID if provided, 
     // OR we find the user by address if not provided.
     
-    let receiverId = data.receiverId;
+    const receiverId = data.receiverId;
     if (!receiverId) {
         // Try to find user by wallet address (complex query needed usually, or iterate linked accounts)
         // For now, we'll just fail or mock it. 

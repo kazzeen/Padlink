@@ -2,7 +2,6 @@ type LogLevel = "info" | "warn" | "error";
 
 export const logger = {
   log: async (level: LogLevel, message: string, context?: Record<string, unknown>) => {
-    // Always log to console in development
     if (process.env.NODE_ENV === "development") {
       switch (level) {
         case "info":
@@ -20,7 +19,11 @@ export const logger = {
     }
 
     try {
-      await fetch("/api/log", {
+      if (process.env.NODE_ENV === "test") {
+        return;
+      }
+      const base = typeof window === "undefined" ? (process.env.APP_BASE_URL || "http://localhost:3000") : "";
+      await fetch(`${base}/api/log`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -33,7 +36,6 @@ export const logger = {
         }),
       });
     } catch (err) {
-      // Fallback to console if network logging fails
       console.error("Failed to send log to server:", err);
     }
   },

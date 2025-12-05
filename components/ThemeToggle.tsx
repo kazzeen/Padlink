@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
-import GlassButton from "@/components/ui/glass/GlassButton";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -14,19 +13,17 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-        <GlassButton size="sm" variant="secondary" className="w-10 h-10 p-0 flex items-center justify-center">
+        <div className="glass-icon-container w-10 h-10 rounded-xl flex items-center justify-center">
             <span className="sr-only">Toggle theme</span>
             <div className="w-5 h-5 bg-current opacity-20 rounded-full" />
-        </GlassButton>
+        </div>
     );
   }
 
   return (
-    <GlassButton
-      size="sm"
-      variant="secondary"
+    <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="w-10 h-10 p-0 flex items-center justify-center"
+      className="glass-icon-container w-10 h-10 rounded-xl flex items-center justify-center text-[var(--glass-text)] hover:scale-105 active:scale-95"
       aria-label="Toggle theme"
     >
       {theme === "dark" ? (
@@ -68,6 +65,6 @@ export function ThemeToggle() {
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
         </svg>
       )}
-    </GlassButton>
+    </button>
   );
 }

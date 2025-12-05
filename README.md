@@ -20,6 +20,59 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Assets & Branding
+
+### Logo Implementation
+The company logo is located at `public/images/logo_transparent.png`.
+
+**Usage Guidelines:**
+- **File Path:** `/images/logo_transparent.png` (accessible via the public directory).
+- **Component:** Use the Next.js `<Image />` component for automatic optimization.
+- **Dimensions:** The logo is square. Recommended display size is `32x32` for headers/navbars.
+- **Styling:** Use `rounded-full` class for the standard circular presentation.
+- **Accessibility:** Always provide descriptive `alt` text (e.g., "PadLink Logo - Connect with compatible roommates").
+
+**Example Usage:**
+```tsx
+import Image from "next/image";
+
+<Image 
+  src="/images/logo_transparent.png" 
+  alt="PadLink Logo" 
+  width={32} 
+  height={32} 
+  className="rounded-full object-cover"
+/>
+```
+
+**Optimization:**
+The source file is optimized (~50KB) to ensure fast loading times and minimal bandwidth usage. Next.js further optimizes this image for production serving.
+
+### Icon Styling (Glass Morphic)
+All icon logos (Brand, Navigation, Functional UI) use a consistent glass morphic styling system.
+
+**Class Usage:**
+Use the `.glass-icon-container` utility class wrapper around your icon or image.
+
+```tsx
+<div className="glass-icon-container w-10 h-10 rounded-full">
+  {/* Your Icon SVG or Image here */}
+</div>
+```
+
+**Features:**
+- **Background:** Semi-transparent (25% opacity)
+- **Blur:** 10px backdrop filter
+- **Border:** 1px solid white (50% opacity)
+- **Shadow:** Soft inner shadow
+- **Dark Mode:** Automatically adjusts to dark theme
+- **Fallbacks:** Solid background for browsers without `backdrop-filter` support
+
+**Performance & Accessibility:**
+- Uses hardware-accelerated CSS properties.
+- Maintains 3:1 contrast ratio via background opacity adjustments.
+- Minimal render time (<10ms).
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

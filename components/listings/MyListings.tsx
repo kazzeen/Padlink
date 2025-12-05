@@ -13,6 +13,7 @@ export default function MyListings() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
   
   // Pagination state
   const [page, setPage] = useState(1);
@@ -57,6 +58,34 @@ export default function MyListings() {
     }
   }, [status, fetchListings]);
 
+  const handleEdit = (listing: Listing) => {
+    setEditingListing(listing);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+        const res = await fetch(`/api/listings/${id}`, {
+            method: "DELETE",
+        });
+
+        if (!res.ok) {
+            throw new Error("Failed to delete listing");
+        }
+
+        // Refresh listings
+        fetchListings();
+    } catch (error) {
+        console.error("Delete error:", error);
+        alert("Failed to delete listing. Please try again.");
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setEditingListing(null);
+  };
+
   if (status === "loading") {
     return <div className="text-[var(--glass-text)]">Loading...</div>;
   }
@@ -74,7 +103,10 @@ export default function MyListings() {
         </div>
         <GlassButton 
           variant="primary" 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setEditingListing(null);
+            setIsModalOpen(true);
+          }}
           className="flex items-center gap-2"
         >
           <span>+</span> New Listing
@@ -136,8 +168,8 @@ export default function MyListings() {
               <MyListingCard 
                 key={listing.id} 
                 listing={listing} 
-                // onEdit={(l) => console.log("Edit", l)}
-                // onDelete={(id) => console.log("Delete", id)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
               />
             ))}
           </div>
@@ -173,10 +205,11 @@ export default function MyListings() {
 
       <AddListingModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={handleModalClose} 
         onSuccess={() => {
             fetchListings();
         }}
+        initialData={editingListing}
       />
     </div>
   );

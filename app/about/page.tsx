@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -13,8 +14,19 @@ export default function AboutPage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Navbar */}
       <nav className="glass-panel flex items-center justify-between px-8 py-4 border-b border-[var(--glass-border)] sticky top-0 z-50">
-        <Link href="/" className="text-2xl font-bold text-[var(--glass-text)] drop-shadow-lg">
-          PadLink
+        <Link href="/" className="flex items-center gap-3">
+          <div className="glass-icon-container w-12 h-12 rounded-full p-1">
+            <Image 
+              src="/images/logo_transparent.png" 
+              alt="PadLink Logo - Return to homepage" 
+              width={32} 
+              height={32} 
+              className="object-contain"
+            />
+          </div>
+          <div className="text-2xl font-bold text-[var(--glass-text)] drop-shadow-lg">
+            PadLink
+          </div>
         </Link>
         <div className="space-x-4 flex items-center">
           <ThemeToggle />
