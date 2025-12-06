@@ -75,6 +75,7 @@
   },
   "overrides": {
     "react": "$react",
-    "react-dom": "$react-dom"
+    "react-dom": "$react-dom",
+    "ws": "^8.18.0"
   }
 }
