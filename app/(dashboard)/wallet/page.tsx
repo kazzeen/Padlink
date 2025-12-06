@@ -91,8 +91,7 @@ export default function WalletPage() {
                 chainType: (linkedWallet as unknown as { chainType: string }).chainType || 'ethereum',
                 chainId: (linkedWallet as unknown as { chainId: string }).chainId,
                 connected: false,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                walletClientType: (linkedWallet as any).walletClientType || ((linkedWallet as any).connectorType === 'embedded' ? 'privy' : 'external')
+        walletClientType: (linkedWallet as LinkedAccount).walletClientType || (((linkedWallet as LinkedAccount).connectorType === 'embedded') ? 'privy' : 'external')
              });
         }
       }

@@ -72,12 +72,12 @@ describe('WalletPage', () => {
     });
 
     // Default fetch implementation
-    (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url, options) => {
       if (url.includes('etherscan')) {
         return { ok: true, json: async () => ({ status: '1', result: [] }) };
       }
       if (url === '/api/solana') {
-        const body = JSON.parse((_options as { body: string }).body);
+        const body = JSON.parse((options as { body: string }).body);
         if (body.action === 'balance') {
            // Default mock balance for Solana
            return { ok: true, json: async () => ({ balance: "2.5000" }) };
@@ -87,7 +87,7 @@ describe('WalletPage', () => {
         }
       }
       if (url === '/api/ethereum') {
-        const body = JSON.parse((_options as { body: string }).body);
+        const body = JSON.parse((options as { body: string }).body);
         if (body.action === 'balance') {
            return { ok: true, json: async () => ({ balance: "1.2345" }) };
         }
@@ -118,7 +118,7 @@ describe('WalletPage', () => {
       ],
     });
 
-    (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url) => {
       if (url === '/api/wallet/export') {
         return { ok: true, json: async () => ({ success: true }) };
       }
@@ -161,7 +161,7 @@ describe('WalletPage', () => {
       ],
     });
 
-    (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url) => {
       if (url === '/api/wallet/export') {
         return { ok: true, json: async () => ({ success: true }) };
       }
@@ -241,7 +241,7 @@ describe('WalletPage', () => {
       { address: '0x123', chainType: 'ethereum', connected: true, walletClientType: 'privy' },
     ]});
 
-    (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url) => {
       if (url === '/api/wallet/export') {
         return { ok: true, json: async () => ({ success: true }) };
       }
@@ -287,7 +287,7 @@ describe('WalletPage', () => {
       { address: '0x123', chainType: 'ethereum', connected: true, walletClientType: 'privy' },
     ]});
 
-    (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url) => {
       if (url === '/api/wallet/export') {
         return { ok: true, json: async () => ({ success: true }) };
       }
@@ -335,7 +335,7 @@ describe('WalletPage', () => {
 
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
-    (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url) => {
       if (url === '/api/wallet/export') {
         return new Promise(resolve => setTimeout(() => resolve({ ok: true, json: async () => ({ success: true }) }), 50));
       }
@@ -381,7 +381,7 @@ describe('WalletPage', () => {
       { address: '0x123', chainType: 'ethereum', connected: true, walletClientType: 'privy' },
     ]});
 
-    (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url) => {
       if (url === '/api/wallet/export') {
         return { ok: true, json: async () => ({ success: true }) };
       }
@@ -430,7 +430,7 @@ describe('WalletPage', () => {
       ],
     });
 
-    (global.fetch as jest.Mock).mockImplementation(async (url, options) => {
+    (global.fetch as jest.Mock).mockImplementation(async (url) => {
       if (url === '/api/wallet/export') {
         return { ok: true, json: async () => ({ success: true }) };
       }
@@ -632,7 +632,7 @@ describe('WalletPage', () => {
       ]});
 
       // Mock backend export log endpoint
-      (global.fetch as jest.Mock).mockImplementation(async (url, _options) => {
+      (global.fetch as jest.Mock).mockImplementation(async (url) => {
         if (url === '/api/wallet/export') {
           return { ok: true, json: async () => ({ success: true }) };
         }

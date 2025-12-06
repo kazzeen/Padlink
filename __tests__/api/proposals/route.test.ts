@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { POST } from "@/app/api/proposals/route";
-import { PUT, GET } from "@/app/api/proposals/[id]/route";
+import { PUT } from "@/app/api/proposals/[id]/route";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { NextRequest } from "next/server";

@@ -16,7 +16,8 @@ jest.mock("@/lib/prisma", () => ({
 
 jest.mock("@privy-io/server-auth", () => ({
   PrivyClient: class {
-    verifyAuthToken(token: string) {
+    verifyAuthToken(_token: string) {
+      void _token;
       return Promise.resolve({ userId: "user-test" });
     }
   },

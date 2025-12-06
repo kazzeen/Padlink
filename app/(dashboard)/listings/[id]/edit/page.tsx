@@ -31,12 +31,12 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
   let parsedImages: string[] = [];
   try {
     parsedAmenities = JSON.parse(listing.amenities);
-  } catch (e) {
+  } catch {
     parsedAmenities = [];
   }
   try {
     parsedImages = JSON.parse(listing.images);
-  } catch (e) {
+  } catch {
     parsedImages = [];
   }
 

@@ -9,6 +9,7 @@ import GlassButton from "@/components/ui/glass/GlassButton";
 import GlassInput from "@/components/ui/glass/GlassInput";
 import { Listing } from "@/lib/types";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 type Step = "BASIC" | "SPECS" | "AMENITIES" | "LOCATION" | "DETAILS" | "IMAGES";
 
@@ -378,7 +379,7 @@ export default function EditListingClient({ listing }: EditListingClientProps) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {images.map((img, i) => (
                   <div key={i} className="relative aspect-square rounded-lg overflow-hidden group">
-                    <img src={img} alt="Listing" className="w-full h-full object-cover" />
+                    <Image src={img} alt="Listing" fill sizes="(max-width: 768px) 50vw, 25vw" style={{ objectFit: 'cover' }} />
                     <button
                       type="button"
                       onClick={() => {
