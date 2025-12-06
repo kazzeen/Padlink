@@ -14,6 +14,17 @@ const nextConfig: NextConfig = {
     "@reown/appkit-controllers",
     "@walletconnect/ethereum-provider",
   ],
+  turbopack: {
+    resolveAlias: {
+      pino: { browser: "pino/browser" },
+    },
+    rules: {
+      "**/*.md": { loaders: ["raw-loader"] },
+      "**/*.zip": { loaders: ["raw-loader"] },
+      "**/*.yml": { loaders: ["raw-loader"] },
+      "**/*.sh": { loaders: ["raw-loader"] },
+    },
+  },
   images: {
     remotePatterns: [
       {
