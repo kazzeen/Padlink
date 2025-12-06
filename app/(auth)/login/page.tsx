@@ -20,9 +20,7 @@ function LoginPageInner() {
   }, [status, router]);
 
   const handleSignIn = () => {
-    signIn(() => {
-      router.push("/dashboard");
-    });
+    signIn();
   };
 
   return (

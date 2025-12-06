@@ -19,6 +19,10 @@ function SignupPageInner() {
     }
   }, [status, router]);
 
+  const handleSignIn = () => {
+    signIn();
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <GlassCard className="w-full max-w-md p-8 text-center">
@@ -29,8 +33,15 @@ function SignupPageInner() {
           Create an account to start your search for the perfect roommate.
         </p>
 
+        {status === "authenticated" && (
+          <div className="mb-4 p-2 bg-green-500/20 text-green-200 rounded flex items-center justify-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+            Redirecting...
+          </div>
+        )}
+
         <GlassButton
-          onClick={signIn}
+          onClick={handleSignIn}
           variant="primary"
           className="w-full mb-2"
           disabled={!canLogin || !authReady}
@@ -48,7 +59,7 @@ function SignupPageInner() {
         <p className="text-sm text-[var(--glass-text-muted)]">
           Already have an account?{" "}
           <button
-            onClick={signIn}
+            onClick={handleSignIn}
             className="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 hover:underline font-medium transition-colors"
             disabled={!canLogin || !authReady}
           >

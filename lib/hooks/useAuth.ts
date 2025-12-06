@@ -123,7 +123,7 @@ export function useAuth() {
       }
   };
 
-  const handleSignIn = (onComplete?: () => void) => {
+  const handleSignIn = () => {
       if (!appIdAvailable) {
         console.warn("Privy appId missing; login blocked");
         return;
@@ -133,14 +133,7 @@ export function useAuth() {
         return;
       }
       console.log("Invoking Privy login()");
-      login({
-        onComplete: (user, isNewUser, wasPreviouslyAuthenticated) => {
-          console.log("Privy login complete", { user, isNewUser, wasPreviouslyAuthenticated });
-          if (onComplete) {
-            onComplete();
-          }
-        }
-      });
+      login();
   };
 
   return {
