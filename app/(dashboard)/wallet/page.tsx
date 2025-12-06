@@ -28,6 +28,20 @@ interface Transaction {
   memo?: string;
 }
 
+interface InternalTransactionDTO {
+  id: string;
+  amount: number;
+  currency: string;
+  senderId: string;
+  receiverId: string;
+  sender?: { name?: string | null } | null;
+  receiver?: { name?: string | null } | null;
+  status: string;
+  createdAt: string;
+  txHash?: string | null;
+  memo?: string | null;
+}
+
 type LinkedAccount = {
   type: string;
   address: string;
@@ -98,19 +112,20 @@ export default function WalletPage() {
       try {
         const internalRes = await fetch('/api/wallet/transactions');
         if (internalRes.ok) {
-            const data = await internalRes.json();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            internalTxs = data.transactions.map((tx: any) => ({
-                id: tx.id,
-                type: 'Transfer',
-                amount: `${tx.amount} ${tx.currency}`,
-                counterparty: tx.senderId === tx.receiverId ? 'Self' : (tx.sender ? `From: ${tx.sender.name}` : `To: ${tx.receiver.name}`),
-                status: tx.status,
-                timestamp: tx.createdAt,
-                hash: tx.txHash || "",
-                memo: tx.memo
-            }));
-            setTransactions(internalTxs);
+            const data = await internalRes.json() as { transactions?: InternalTransactionDTO[] };
+            if (data.transactions && Array.isArray(data.transactions)) {
+                internalTxs = data.transactions.map((tx) => ({
+                    id: tx.id,
+                    type: 'Transfer',
+                    amount: `${tx.amount} ${tx.currency}`,
+                    counterparty: tx.senderId === tx.receiverId ? 'Self' : (tx.sender ? `From: ${tx.sender.name}` : `To: ${tx.receiver?.name}`),
+                    status: tx.status,
+                    timestamp: tx.createdAt,
+                    hash: tx.txHash || "",
+                    memo: tx.memo || undefined
+                }));
+                setTransactions(internalTxs);
+            }
         }
       } catch (e) {
         console.error("Failed to fetch internal transactions", e);
