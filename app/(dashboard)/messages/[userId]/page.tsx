@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/hooks/useAuth";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import GlassInput from "@/components/ui/glass/GlassInput";
+import CreateProposalModal from "@/components/Proposals/CreateProposalModal";
+import ProposalCard from "@/components/Proposals/ProposalCard";
 
 type Message = {
   id: string;
@@ -13,6 +15,8 @@ type Message = {
   content: string;
   createdAt: string;
   sender: { name: string | null };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  proposal?: any;
 };
 
 export default function ChatPage({ params }: { params: Promise<{ userId: string }> }) {
@@ -23,6 +27,7 @@ export default function ChatPage({ params }: { params: Promise<{ userId: string 
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showProposalModal, setShowProposalModal] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = useCallback(async () => {
@@ -123,20 +128,24 @@ export default function ChatPage({ params }: { params: Promise<{ userId: string 
               const isMe = msg.senderId === session?.user?.id;
               return (
                 <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                  <div 
-                    className={`
-                      max-w-[70%] px-4 py-2 rounded-2xl 
-                      ${isMe 
-                        ? "bg-blue-600 text-white rounded-br-none" 
-                        : "bg-white/80 dark:bg-white/10 text-[var(--glass-text)] rounded-bl-none shadow-sm"
-                      }
-                    `}
-                  >
-                    <p>{msg.content}</p>
-                    <p className={`text-[10px] mt-1 ${isMe ? "text-blue-100" : "opacity-50"}`}>
-                      {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </p>
-                  </div>
+                  {msg.proposal ? (
+                    <ProposalCard proposal={msg.proposal} onUpdate={fetchMessages} />
+                  ) : (
+                    <div 
+                      className={`
+                        max-w-[70%] px-4 py-2 rounded-2xl 
+                        ${isMe 
+                          ? "bg-blue-600 text-white rounded-br-none" 
+                          : "bg-white/80 dark:bg-white/10 text-[var(--glass-text)] rounded-bl-none shadow-sm"
+                        }
+                      `}
+                    >
+                      <p>{msg.content}</p>
+                      <p className={`text-[10px] mt-1 ${isMe ? "text-blue-100" : "opacity-50"}`}>
+                        {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </p>
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -146,6 +155,15 @@ export default function ChatPage({ params }: { params: Promise<{ userId: string 
         {/* Input Area */}
         <div className="p-4 border-t border-[var(--glass-border)] bg-white/50 dark:bg-black/20 backdrop-blur-sm">
           <form onSubmit={handleSend} className="flex gap-2">
+            <GlassButton
+              type="button"
+              onClick={() => setShowProposalModal(true)}
+              variant="secondary"
+              className="px-3"
+              title="Create Proposal"
+            >
+              🏠
+            </GlassButton>
             <GlassInput
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
@@ -164,6 +182,14 @@ export default function ChatPage({ params }: { params: Promise<{ userId: string 
           </form>
         </div>
       </GlassCard>
+
+      {showProposalModal && (
+        <CreateProposalModal
+          receiverId={userId}
+          onClose={() => setShowProposalModal(false)}
+          onSuccess={fetchMessages}
+        />
+      )}
     </div>
   );
 }

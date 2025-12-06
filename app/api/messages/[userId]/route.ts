@@ -24,6 +24,7 @@ export async function GET(
       orderBy: { createdAt: "asc" },
       include: {
         sender: { select: { id: true, name: true, image: true } },
+        proposal: { include: { listing: true } },
       },
     });
 

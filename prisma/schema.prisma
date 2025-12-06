@@ -44,6 +44,10 @@ model User {
   // Messages
   sentMessages   Message[] @relation("sender")
   receivedMessages Message[] @relation("receiver")
+
+  // Proposals
+  sentProposals     Proposal[] @relation("ProposedBy")
+  receivedProposals Proposal[] @relation("ProposedTo")
   
   // Reviews
   reviewsGiven   Review[] @relation("reviewer")
@@ -241,6 +245,7 @@ model Listing {
   isActive  Boolean @default(true)
   
   applications RequestListing[]
+  proposals    Proposal[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -287,6 +292,9 @@ model Message {
   content   String
   read      Boolean    @default(false)
   
+  proposalId String?
+  proposal   Proposal? @relation(fields: [proposalId], references: [id])
+
   createdAt DateTime @default(now())
 }
 
@@ -359,4 +367,32 @@ model SupportTicket {
   status    String   // "OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Proposal {
+  id          String   @id @default(cuid())
+  
+  senderId    String
+  sender      User     @relation("ProposedBy", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId  String
+  receiver    User     @relation("ProposedTo", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  listingId   String
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  
+  status      String   @default("PENDING") // PENDING, ACCEPTED, DECLINED, EXPIRED, CANCELLED
+  
+  // Terms snapshot
+  rentAmount  Float
+  moveInDate  DateTime
+  leaseTerm   Int      // months
+  message     String?
+  
+  expiresAt   DateTime
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  messages    Message[]
 }
