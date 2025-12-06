@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
+import { usePrivy } from "@privy-io/react-auth";
 
-export default function SignupPage() {
-  const { signIn, status } = useAuth();
+function SignupPageInner() {
+  const { signIn, status, authReady, canLogin } = useAuth();
+  const { ready: privyReady, authenticated: privyAuthenticated, user: privyUser } = usePrivy();
   const router = useRouter();
+  const showDebug = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("authDebug") === "1";
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -29,21 +32,58 @@ export default function SignupPage() {
         <GlassButton
           onClick={signIn}
           variant="primary"
-          className="w-full mb-4"
+          className="w-full mb-2"
+          disabled={!canLogin || !authReady}
         >
           Sign Up
         </GlassButton>
+
+        {!canLogin && (
+          <div className="text-red-500 text-sm mb-4">Authentication is not configured.</div>
+        )}
+        {canLogin && !authReady && (
+          <div className="text-[var(--glass-text-muted)] text-sm mb-4">Preparing authentication...</div>
+        )}
 
         <p className="text-sm text-[var(--glass-text-muted)]">
           Already have an account?{" "}
           <button
             onClick={signIn}
             className="text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 hover:underline font-medium transition-colors"
+            disabled={!canLogin || !authReady}
           >
             Log in
           </button>
         </p>
+
+        {showDebug && (
+          <div className="mt-6 text-left text-sm space-y-2 p-3 rounded-md border border-[var(--glass-border)] bg-black/5 dark:bg-white/5">
+            <div className="font-semibold">Auth Diagnostics</div>
+            <div>env NEXT_PUBLIC_PRIVY_APP_ID: {String(Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID))}</div>
+            <div>authReady: {String(authReady)}</div>
+            <div>canLogin: {String(canLogin)}</div>
+            <div>status: {status}</div>
+            <div>privyReady: {String(privyReady)}</div>
+            <div>privyAuthenticated: {String(privyAuthenticated)}</div>
+            <div>privyUserId: {privyUser?.id ?? "null"}</div>
+          </div>
+        )}
       </GlassCard>
     </div>
   );
+}
+
+export default function SignupPage() {
+  const appIdAvailable = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
+  if (!appIdAvailable) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <GlassCard className="w-full max-w-md p-8 text-center">
+          <h1 className="text-3xl font-bold mb-4 text-[var(--glass-text)] drop-shadow-md">Authentication Unavailable</h1>
+          <p className="text-[var(--glass-text-muted)] mb-8">Missing configuration. Set NEXT_PUBLIC_PRIVY_APP_ID.</p>
+        </GlassCard>
+      </div>
+    );
+  }
+  return <SignupPageInner />;
 }

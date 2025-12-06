@@ -19,6 +19,7 @@ export function useAuth() {
   const { user: privyUser, ready, authenticated, login, logout, getAccessToken } = usePrivy();
   const [dbUser, setDbUser] = useState<DBUser | null>(null);
   const [loadingDbUser, setLoadingDbUser] = useState(false);
+  const appIdAvailable = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
   const router = useRouter();
 
   useEffect(() => {
@@ -54,7 +55,8 @@ export function useAuth() {
                       });
                       
                       if (syncRes.ok) {
-                          // 3. Retry profile fetch
+                          const synced = await syncRes.json();
+                          setDbUser(synced);
                           const retryRes = await fetch("/api/users/profile");
                           if (retryRes.ok) {
                               const data = await retryRes.json();
@@ -76,22 +78,34 @@ export function useAuth() {
     }
   }, [ready, authenticated, getAccessToken, privyUser?.id, dbUser, loadingDbUser]); 
 
-  const status = !ready || (authenticated && !dbUser && loadingDbUser) 
-    ? "loading" 
-    : (authenticated && dbUser ? "authenticated" : "unauthenticated");
+  const status = !ready ? "loading" : (authenticated ? "authenticated" : "unauthenticated");
 
   const session = useMemo(() => {
-    return status === "authenticated" && dbUser ? {
-      user: {
+    if (status !== "authenticated") return null;
+    if (dbUser) {
+      return {
+        user: {
           id: dbUser.id,
           privyId: dbUser.privyId,
           name: dbUser.name,
           email: dbUser.email,
           image: dbUser.image || dbUser.avatar,
           role: dbUser.role
+        }
+      };
+    }
+    const p = privyUser as unknown as { id?: string; email?: { address?: string }; google?: { name?: string; picture?: string } };
+    return {
+      user: {
+        id: `privy:${p?.id ?? ""}`,
+        privyId: p?.id ?? null,
+        name: p?.google?.name ?? null,
+        email: p?.email?.address ?? null,
+        image: p?.google?.picture ?? null,
+        role: "USER"
       }
-    } : null;
-  }, [status, dbUser]);
+    };
+  }, [status, dbUser, privyUser]);
 
   const handleSignOut = async (options?: { callbackUrl?: string }) => {
       // Clear server-side session
@@ -110,12 +124,23 @@ export function useAuth() {
   };
 
   const handleSignIn = () => {
+      if (!appIdAvailable) {
+        console.warn("Privy appId missing; login blocked");
+        return;
+      }
+      if (!ready) {
+        console.warn("Privy provider not ready; login blocked");
+        return;
+      }
+      console.log("Invoking Privy login()");
       login();
   };
 
   return {
     data: session,
     status,
+    authReady: ready,
+    canLogin: appIdAvailable,
     signIn: handleSignIn,
     signOut: handleSignOut
   };
