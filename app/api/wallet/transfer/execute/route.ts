@@ -20,12 +20,12 @@ export async function POST(req: NextRequest) {
   // Idempotency Check
   const idempotencyKey = req.headers.get("idempotency-key");
   if (idempotencyKey) {
-      const existing = await prisma.transaction.findUnique({
-          where: { idempotencyKey }
-      });
-      if (existing) {
-          return NextResponse.json({ success: true, transaction: existing, cached: true });
-      }
+    const existing = await prisma.transaction.findUnique({
+      where: { idempotencyKey }
+    });
+    if (existing) {
+      return NextResponse.json({ success: true, transaction: existing, cached: true });
+    }
   }
 
   try {
