@@ -3,6 +3,17 @@ import path from "path";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  serverExternalPackages: [
+    "thread-stream",
+    "pino",
+    "pino-worker",
+    "pino-file",
+    "pino-pretty",
+    "@reown/appkit",
+    "@reown/appkit-utils",
+    "@reown/appkit-controllers",
+    "@walletconnect/ethereum-provider",
+  ],
   images: {
     remotePatterns: [
       {
