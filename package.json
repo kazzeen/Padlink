@@ -72,5 +72,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5",
     "why-is-node-running": "^3.2.2"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
   }
 }
