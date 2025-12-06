@@ -8,13 +8,18 @@ export default function PrivyProviderWrapper({
 }: {
   children: React.ReactNode;
 }) {
+  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  if (!appId) {
+    return <>{children}</>;
+  }
+
   const solanaConnectors = toSolanaWalletConnectors({
     shouldAutoConnect: true,
   });
 
   return (
     <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
+      appId={appId}
       config={{
         loginMethods: ["email", "wallet", "google"],
         appearance: {
