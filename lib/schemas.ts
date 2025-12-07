@@ -35,7 +35,7 @@ export const profileSchema = z.object({
   ).optional(),
   avatar: z.string().refine((val) => {
     if (!val) return true;
-    return val.startsWith("/") || /^(http|https):\/\//.test(val);
+    return val.startsWith("/") || /^(http|https):\/\//.test(val) || val.startsWith("data:");
   }, "Must be a valid URL or path").optional().or(z.literal("")),
   preferences: z.object({
     minBudget: z.preprocess(

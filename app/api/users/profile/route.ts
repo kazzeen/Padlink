@@ -12,7 +12,7 @@ const profileSchema = z.object({
   age: z.number().min(18).max(120).optional().nullable(),
   avatar: z.string().refine((val) => {
     if (!val) return true;
-    return val.startsWith("/") || /^(http|https):\/\//.test(val);
+    return val.startsWith("/") || /^(http|https):\/\//.test(val) || val.startsWith("data:");
   }, "Must be a valid URL or path").optional().nullable(),
   preferences: z.object({
     minBudget: z.number().min(0),
