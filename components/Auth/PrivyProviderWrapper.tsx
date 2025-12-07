@@ -35,10 +35,7 @@ export default function PrivyProviderWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "cmii4p2ag0509jy0cnem9kv2s";
-  if (!process.env.NEXT_PUBLIC_PRIVY_APP_ID) {
-    console.warn("Using fallback Privy App ID; set NEXT_PUBLIC_PRIVY_APP_ID in environment.");
-  }
+  const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
 
   const solanaConnectors = toSolanaWalletConnectors({
     shouldAutoConnect: true,

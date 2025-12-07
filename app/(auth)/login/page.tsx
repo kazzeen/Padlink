@@ -8,19 +8,28 @@ import GlassButton from "@/components/ui/glass/GlassButton";
 import { usePrivy } from "@privy-io/react-auth";
 
 function LoginPageInner() {
-  const { signIn, status, authReady, canLogin } = useAuth();
+  const { signIn, status, authReady, canLogin, sessionReady, loadingDbUser, syncError, retrySync } = useAuth();
   const { ready: privyReady, authenticated: privyAuthenticated, user: privyUser } = usePrivy();
   const router = useRouter();
   const showDebug = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("authDebug") === "1";
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (sessionReady) {
       router.push("/dashboard");
     }
-  }, [status, router]);
+  }, [sessionReady, router]);
 
   const handleSignIn = () => {
-    signIn();
+    if (!authReady || !canLogin) return;
+    if (status === "unauthenticated") {
+      signIn();
+      return;
+    }
+    if (sessionReady) {
+      router.push("/dashboard");
+      return;
+    }
+    retrySync();
   };
 
   return (
@@ -33,7 +42,7 @@ function LoginPageInner() {
           Sign in to access your dashboard and connect with roommates.
         </p>
 
-        {status === "authenticated" && (
+        {sessionReady && (
           <div className="mb-4 p-2 bg-green-500/20 text-green-200 rounded flex items-center justify-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
             Redirecting...

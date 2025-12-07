@@ -1,7 +1,7 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 export interface DBUser {
@@ -19,64 +19,76 @@ export function useAuth() {
   const { user: privyUser, ready, authenticated, login, logout, getAccessToken } = usePrivy();
   const [dbUser, setDbUser] = useState<DBUser | null>(null);
   const [loadingDbUser, setLoadingDbUser] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const appIdAvailable = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
   const router = useRouter();
 
+  const attemptSync = useCallback(async () => {
+    try {
+      setLoadingDbUser(true);
+      setSyncError(null);
+      const res = await fetch("/api/users/profile", { credentials: "include" });
+      let needsSync = false;
+
+      if (res.ok) {
+        const data = await res.json();
+        if (privyUser?.id && data.privyId !== privyUser.id) {
+          needsSync = true;
+        } else {
+          setDbUser(data);
+        }
+      } else if (res.status === 401) {
+        needsSync = true;
+      } else {
+        setSyncError(`profile_${res.status}`);
+      }
+
+      if (needsSync) {
+        const token = await getAccessToken();
+        if (!token) {
+          setSyncError("missing_token");
+          return;
+        }
+        const syncRes = await fetch("/api/auth/privy-sync", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+        });
+        if (syncRes.ok) {
+          const synced = await syncRes.json();
+          setDbUser(synced);
+          const retryRes = await fetch("/api/users/profile", { credentials: "include" });
+          if (retryRes.ok) {
+            const data = await retryRes.json();
+            setDbUser(data);
+          } else {
+            setSyncError(`profile_retry_${retryRes.status}`);
+          }
+        } else {
+          try {
+            const details = await syncRes.json();
+            setSyncError(`sync_${syncRes.status}:${details?.error || "unknown"}`);
+          } catch {
+            setSyncError(`sync_${syncRes.status}`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Auth sync error:", err);
+      setSyncError("sync_exception");
+    } finally {
+      setLoadingDbUser(false);
+    }
+  }, [getAccessToken, privyUser?.id]);
+
   useEffect(() => {
     if (ready && authenticated && !dbUser && !loadingDbUser) {
-      setLoadingDbUser(true);
-      
-      const fetchProfile = async () => {
-          try {
-              // 1. Try to fetch profile (relies on cookie)
-              const res = await fetch("/api/users/profile");
-              let needsSync = false;
-              
-              if (res.ok) {
-                  const data = await res.json();
-                  // Check if session matches current Privy user
-                  // If dbUser has no privyId (legacy) or different privyId, we need to sync
-                  if (privyUser?.id && data.privyId !== privyUser.id) {
-                      needsSync = true;
-                  } else {
-                      setDbUser(data);
-                  }
-              } else if (res.status === 401) {
-                  needsSync = true;
-              }
-
-              if (needsSync) {
-                  // 2. If 401 or mismatch, sync with Privy token.
-                  const token = await getAccessToken();
-                  if (token) {
-                      const syncRes = await fetch("/api/auth/privy-sync", {
-                          method: "POST",
-                          headers: { Authorization: `Bearer ${token}` }
-                      });
-                      
-                      if (syncRes.ok) {
-                          const synced = await syncRes.json();
-                          setDbUser(synced);
-                          const retryRes = await fetch("/api/users/profile");
-                          if (retryRes.ok) {
-                              const data = await retryRes.json();
-                              setDbUser(data);
-                          }
-                      }
-                  }
-              }
-          } catch (err) {
-              console.error("Error fetching user profile:", err);
-          } finally {
-              setLoadingDbUser(false);
-          }
-      };
-
-      fetchProfile();
+      attemptSync();
     } else if (!authenticated) {
-        setDbUser(null);
+      setDbUser(null);
+      setSyncError(null);
     }
-  }, [ready, authenticated, getAccessToken, privyUser?.id, dbUser, loadingDbUser]); 
+  }, [ready, authenticated, getAccessToken, privyUser?.id, dbUser, loadingDbUser, attemptSync]);
 
   const status = !ready ? "loading" : (authenticated ? "authenticated" : "unauthenticated");
 
@@ -106,6 +118,8 @@ export function useAuth() {
       }
     };
   }, [status, dbUser, privyUser]);
+
+  const sessionReady = status === "authenticated" && dbUser !== null;
 
   const handleSignOut = async (options?: { callbackUrl?: string }) => {
       // Clear server-side session
@@ -139,6 +153,10 @@ export function useAuth() {
   return {
     data: session,
     status,
+    sessionReady,
+    loadingDbUser,
+    syncError,
+    retrySync: attemptSync,
     authReady: ready,
     canLogin: appIdAvailable,
     signIn: handleSignIn,
