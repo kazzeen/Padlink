@@ -188,12 +188,15 @@ export default function EditListingClient({ listing }: EditListingClientProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Property Type</label>
-                  <select {...register("propertyType")} className="glass-input w-full p-3 rounded-xl bg-white/5 border border-[var(--glass-border)] text-[var(--glass-text)]">
-                    <option value="">Select Type</option>
-                    <option value="Apartment">Apartment</option>
-                    <option value="House">House</option>
-                    <option value="Condo">Condo</option>
-                    <option value="Townhouse">Townhouse</option>
+                  <select 
+                    {...register("propertyType")} 
+                    className="w-full p-3 rounded-xl bg-white border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  >
+                    <option value="" className="text-gray-500">Select Type</option>
+                    <option value="Apartment" className="text-black">Apartment</option>
+                    <option value="House" className="text-black">House</option>
+                    <option value="Condo" className="text-black">Condo</option>
+                    <option value="Townhouse" className="text-black">Townhouse</option>
                   </select>
                   {errors.propertyType && <p className="text-red-500 text-xs mt-1">{errors.propertyType.message}</p>}
                 </div>
