@@ -8,7 +8,7 @@ import GlassButton from "@/components/ui/glass/GlassButton";
 import { usePrivy } from "@privy-io/react-auth";
 
 function LoginPageInner() {
-  const { signIn, status, authReady, canLogin, sessionReady, loadingDbUser, syncError, retrySync } = useAuth();
+  const { signIn, status, authReady, canLogin, sessionReady, retrySync } = useAuth();
   const { ready: privyReady, authenticated: privyAuthenticated, user: privyUser } = usePrivy();
   const router = useRouter();
   const showDebug = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("authDebug") === "1";
