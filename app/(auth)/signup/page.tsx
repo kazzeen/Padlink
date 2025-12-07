@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import { usePrivy } from "@privy-io/react-auth";
@@ -11,7 +11,8 @@ function SignupPageInner() {
   const { signIn, status, authReady, canLogin, sessionReady, retrySync } = useAuth();
   const { ready: privyReady, authenticated: privyAuthenticated, user: privyUser } = usePrivy();
   const router = useRouter();
-  const showDebug = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("authDebug") === "1";
+  const searchParams = useSearchParams();
+  const showDebug = searchParams.get("authDebug") === "1";
 
   useEffect(() => {
     if (sessionReady) {
@@ -105,5 +106,9 @@ export default function SignupPage() {
       </div>
     );
   }
-  return <SignupPageInner />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div></div>}>
+      <SignupPageInner />
+    </Suspense>
+  );
 }

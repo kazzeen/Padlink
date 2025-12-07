@@ -572,7 +572,7 @@ export default function WalletPage() {
                        <div className="font-medium text-[var(--glass-text)]">
                          {tx.counterparty && tx.counterparty !== 'Self' && tx.counterparty.length < 20 ? tx.counterparty : tx.type}
                        </div>
-                       <div className="text-xs text-[var(--glass-text-muted)]">{new Date(tx.timestamp).toLocaleDateString()}</div>
+                       <div className="text-xs text-[var(--glass-text-muted)]">{new Date(tx.timestamp).toLocaleDateString("en-US", { timeZone: "UTC" })}</div>
                      </div>
                    </div>
                    <div className="text-right">
@@ -600,7 +600,7 @@ export default function WalletPage() {
                        <div>From/To:</div>
                        <div className="font-mono text-[var(--glass-text)] truncate">{tx.counterparty}</div>
                        <div>Time:</div>
-                       <div className="text-[var(--glass-text)]">{new Date(tx.timestamp).toLocaleString()}</div>
+                       <div className="text-[var(--glass-text)]">{new Date(tx.timestamp).toLocaleString("en-US", { timeZone: "UTC" })}</div>
                        {tx.memo && (
                          <>
                             <div>Memo:</div>

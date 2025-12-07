@@ -104,7 +104,7 @@ export default function ProposalCard({ proposal, onUpdate }: ProposalCardProps) 
         </div>
         <div>
           <p className="text-[var(--glass-text-muted)]">Move-in</p>
-          <p className="font-medium text-[var(--glass-text)]">{new Date(proposal.moveInDate).toLocaleDateString()}</p>
+          <p className="font-medium text-[var(--glass-text)]">{new Date(proposal.moveInDate).toLocaleDateString("en-US", { timeZone: "UTC" })}</p>
         </div>
         <div>
           <p className="text-[var(--glass-text-muted)]">Term</p>
@@ -112,7 +112,7 @@ export default function ProposalCard({ proposal, onUpdate }: ProposalCardProps) 
         </div>
         <div>
           <p className="text-[var(--glass-text-muted)]">Expires</p>
-          <p className="font-medium text-[var(--glass-text)]">{new Date(proposal.expiresAt).toLocaleDateString()}</p>
+          <p className="font-medium text-[var(--glass-text)]">{new Date(proposal.expiresAt).toLocaleDateString("en-US", { timeZone: "UTC" })}</p>
         </div>
       </div>
 

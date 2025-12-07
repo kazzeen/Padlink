@@ -34,22 +34,21 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-center mt-0 mb-6">
-          <GlassCard
-            className={`${entered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"} transition-all duration-300 ease-out w-full max-w-xl shadow-lg p-3`}
-          >
-            <h2 className="text-sm font-bold mb-2 text-[var(--glass-text)] text-center">Quick Stats</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="glass-panel bg-blue-500/10 p-3 rounded-xl text-center border border-blue-400/30">
-                <div className="text-xl font-bold text-blue-800 dark:text-blue-200">0</div>
-                <div className="text-xs text-[var(--glass-text-muted)]">New Matches</div>
+        {/* Quick Stats Compact Bar */}
+        <div className={`mb-6 transition-all duration-300 ease-out ${entered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"}`}>
+           <GlassCard className="w-full p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-[var(--glass-text-muted)] shrink-0">Quick Stats</h2>
+              <div className="flex flex-1 w-full sm:w-auto gap-3">
+                 <div className="flex-1 glass-panel bg-blue-500/10 p-2 rounded-lg flex items-center justify-center gap-3 border border-blue-400/30">
+                   <div className="text-2xl font-bold text-blue-800 dark:text-blue-200 leading-none">0</div>
+                   <div className="text-xs font-medium text-[var(--glass-text-muted)]">New Matches</div>
+                 </div>
+                 <div className="flex-1 glass-panel bg-green-500/10 p-2 rounded-lg flex items-center justify-center gap-3 border border-green-400/30">
+                   <div className="text-2xl font-bold text-green-800 dark:text-green-200 leading-none">0</div>
+                   <div className="text-xs font-medium text-[var(--glass-text-muted)]">Messages</div>
+                 </div>
               </div>
-              <div className="glass-panel bg-green-500/10 p-3 rounded-xl text-center border border-green-400/30">
-                <div className="text-xl font-bold text-green-800 dark:text-green-200">0</div>
-                <div className="text-xs text-[var(--glass-text-muted)]">Messages</div>
-              </div>
-            </div>
-          </GlassCard>
+           </GlassCard>
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -78,33 +77,17 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="flex justify-center mt-2 md:mt-4 mb-8">
-          <GlassCard
-            className={`${entered ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"} transition-all duration-300 ease-out w-full max-w-2xl shadow-lg`}
-          >
-            <h2 className="text-xl font-bold mb-4 text-[var(--glass-text)] text-center">Quick Stats</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="glass-panel bg-blue-500/10 p-4 rounded-xl text-center border border-blue-400/30">
-                <div className="text-3xl font-bold text-blue-800 dark:text-blue-200">0</div>
-                <div className="text-sm text-[var(--glass-text-muted)]">New Matches</div>
+        <div className="mb-8">
+           <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-[var(--glass-text)]">Your Profile</h2>
+                <p className="text-[var(--glass-text-muted)] text-sm">
+                  Keep your profile updated to get better matches.
+                </p>
               </div>
-              <div className="glass-panel bg-green-500/10 p-4 rounded-xl text-center border border-green-400/30">
-                <div className="text-3xl font-bold text-green-800 dark:text-green-200">0</div>
-                <div className="text-sm text-[var(--glass-text-muted)]">Messages</div>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-
-        <div className="grid gap-8 md:grid-cols-2">
-          <GlassCard className="shadow-lg">
-            <h2 className="text-xl font-bold mb-4 text-[var(--glass-text)]">Your Profile</h2>
-            <p className="text-[var(--glass-text-muted)] mb-4">
-              Keep your profile updated to get better matches.
-            </p>
-            {/* We can embed the profile form here or link to it */}
-            <ProfileForm />
-          </GlassCard>
+           </div>
+           
+           <ProfileForm layoutMode="grid" />
         </div>
 
         <div className="mt-8">

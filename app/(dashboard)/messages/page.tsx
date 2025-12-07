@@ -53,7 +53,7 @@ export default function MessagesPage() {
                     </h3>
                     <span className="text-xs text-[var(--glass-text-muted)]">
                       {conv.lastMessage 
-                        ? new Date(conv.lastMessage.createdAt).toLocaleDateString()
+                        ? new Date(conv.lastMessage.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })
                         : "New Connection"}
                     </span>
                   </div>

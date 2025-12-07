@@ -16,7 +16,7 @@ export default function ProfilePage() {
         </p>
       </div>
       
-      <ProfileForm />
+      <ProfileForm layoutMode="grid" />
 
       <WalletAccounts />
     </div>

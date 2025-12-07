@@ -137,7 +137,7 @@ export function useAuth() {
       }
   };
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
       if (!appIdAvailable) {
         console.warn("Privy appId missing; login blocked");
         return;
@@ -146,8 +146,16 @@ export function useAuth() {
         console.warn("Privy provider not ready; login blocked");
         return;
       }
-      console.log("Invoking Privy login()");
-      login();
+      try {
+        await login();
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        const isOriginError = /origin not allowed/i.test(msg);
+        setSyncError(`login_error:${msg}`);
+        if (isOriginError && typeof window !== "undefined") {
+          window.location.href = "/api/auth/signin/google?callbackUrl=/dashboard";
+        }
+      }
   };
 
   return {

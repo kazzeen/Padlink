@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
-import { use } from "react";
 
 interface SupportTicket {
   id: string;
@@ -16,8 +15,9 @@ interface SupportTicket {
   createdAt: string;
 }
 
-export default function TicketDetailsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function TicketDetailsPage() {
+  const params = useParams();
+  const id = (params?.id as string) || "";
   const { status } = useAuth();
   const router = useRouter();
   const [ticket, setTicket] = useState<SupportTicket | null>(null);
@@ -84,7 +84,7 @@ export default function TicketDetailsPage({ params }: { params: Promise<{ id: st
                   {ticket.category}
                 </span>
                 <span className="px-2 py-1 rounded bg-white/10 text-[var(--glass-text)]">
-                  {new Date(ticket.createdAt).toLocaleString()}
+                  {new Date(ticket.createdAt).toLocaleString("en-US", { timeZone: "UTC" })}
                 </span>
               </div>
             </div>

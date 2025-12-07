@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import GlassCard from "@/components/ui/glass/GlassCard";
@@ -16,8 +16,9 @@ type UserProfile = Partial<User> & {
   isConnected?: boolean;
 };
 
-export default function UserProfilePage({ params }: { params: Promise<{ userId: string }> }) {
-  const { userId } = use(params);
+export default function UserProfilePage() {
+  const params = useParams();
+  const userId = (params?.userId as string) || "";
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -174,7 +175,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ userId: 
            <div className="space-y-4">
             <PreferenceItem 
               label="Member Since" 
-              value={user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "Unknown"} 
+              value={user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" }) : "Unknown"} 
             />
             <PreferenceItem 
               label="Commute Preference" 

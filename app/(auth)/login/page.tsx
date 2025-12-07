@@ -1,17 +1,18 @@
 "use client";
 
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
 import GlassCard from "@/components/ui/glass/GlassCard";
 import GlassButton from "@/components/ui/glass/GlassButton";
 import { usePrivy } from "@privy-io/react-auth";
 
 function LoginPageInner() {
-  const { signIn, status, authReady, canLogin, sessionReady, retrySync } = useAuth();
+  const { signIn, status, authReady, canLogin, sessionReady, retrySync, syncError } = useAuth();
   const { ready: privyReady, authenticated: privyAuthenticated, user: privyUser } = usePrivy();
   const router = useRouter();
-  const showDebug = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("authDebug") === "1";
+  const searchParams = useSearchParams();
+  const showDebug = searchParams.get("authDebug") === "1";
 
   useEffect(() => {
     if (sessionReady) {
@@ -57,6 +58,14 @@ function LoginPageInner() {
         >
           Sign In
         </GlassButton>
+
+        {syncError && syncError.startsWith("login_error:") && (
+          <div className="mt-3 text-red-500 text-sm">
+            {syncError.includes("Origin not allowed")
+              ? "Login blocked: add http://localhost:3000 to Privy allowed origins (Dashboard → Security → Allowed Origins)."
+              : "Login failed. Please try again or use another method."}
+          </div>
+        )}
 
         {!canLogin && (
           <div className="text-red-500 text-sm mb-4">Authentication is not configured.</div>
@@ -105,5 +114,9 @@ export default function LoginPage() {
       </div>
     );
   }
-  return <LoginPageInner />;
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div></div>}>
+      <LoginPageInner />
+    </Suspense>
+  );
 }

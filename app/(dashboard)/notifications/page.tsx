@@ -122,7 +122,7 @@ export default function NotificationsPage() {
                       {notification.message}
                     </p>
                     <p className="text-xs text-[var(--glass-text-muted)]">
-                      {new Date(notification.createdAt).toLocaleDateString()} at {new Date(notification.createdAt).toLocaleTimeString()}
+                      {new Date(notification.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })} at {new Date(notification.createdAt).toLocaleTimeString("en-US", { timeZone: "UTC" })}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-2">

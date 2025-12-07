@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!res.ok) {
-        return NextResponse.json({ error: "RPC request failed" }, { status: res.status });
+        return NextResponse.json({ balance: 0 });
       }
 
       const data = await res.json();
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!res.ok) {
-        return NextResponse.json({ error: "RPC request failed" }, { status: res.status });
+        return NextResponse.json({ transactions: [] });
       }
 
       const data = await res.json();

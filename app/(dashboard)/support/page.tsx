@@ -72,7 +72,7 @@ export default function SupportPage() {
                         <div>
                         <h3 className="font-bold text-[var(--glass-text)]">{ticket.subject}</h3>
                         <p className="text-sm text-[var(--glass-text-muted)]">
-                            {ticket.category} • {new Date(ticket.createdAt).toLocaleDateString()}
+                            {ticket.category} • {new Date(ticket.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}
                         </p>
                         </div>
                         <div className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-[var(--glass-text)]">

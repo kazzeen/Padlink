@@ -12,7 +12,7 @@ import GlassButton from "@/components/ui/glass/GlassButton";
 import GlassInput from "@/components/ui/glass/GlassInput";
 import ImageUpload from "@/components/ui/ImageUpload";
 
-export default function ProfileForm() {
+export default function ProfileForm({ layoutMode = "stacked" }: { layoutMode?: "stacked" | "grid" }) {
   const { data: session } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -270,136 +270,140 @@ export default function ProfileForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit, onError)}
-      className="space-y-8 max-w-2xl mx-auto"
+      className={`mx-auto ${layoutMode === "grid" ? "max-w-7xl" : "max-w-2xl space-y-8"}`}
     >
-      <GlassCard className="space-y-6">
-        <h2 className="text-xl font-semibold text-[var(--glass-text)] mb-6">Basic Info</h2>
-        
-        <div className="flex justify-center mb-6">
-           <ImageUpload 
-             currentImage={getValues("avatar") || session?.user?.image || null}
-             onUploadComplete={handleImageUpload}
-           />
-           {/* Hidden input to register avatar field */}
-           <input type="hidden" {...register("avatar")} />
-        </div>
-
-        <div className="space-y-4">
-          <GlassInput
-            label="Full Name"
-            {...register("name")}
-            placeholder="Your name"
-            error={errors.name?.message}
-          />
-
-          <GlassInput
-            label="Age"
-            {...register("age", { valueAsNumber: true })}
-            type="number"
-            placeholder="Your age"
-            error={errors.age?.message}
-          />
-
-          <div>
-            <label htmlFor="bio" className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">
-              Bio
-            </label>
-            <textarea
-              id="bio"
-              {...register("bio")}
-              className="glass-input w-full px-4 py-3 rounded-xl transition-all duration-200 placeholder-gray-500 dark:placeholder-white/40 focus:border-gray-400 dark:focus:border-white/60 focus:outline-none focus:shadow-[0_0_10px_rgba(255,255,255,0.1)]"
-              placeholder="Tell us about yourself"
-              rows={4}
-            />
-            {errors.bio && (
-              <p className="text-red-500 dark:text-red-300 text-xs mt-1 ml-1 animate-pulse">{errors.bio.message}</p>
-            )}
+      <div className={layoutMode === "grid" ? "grid grid-cols-1 lg:grid-cols-2 gap-8" : "space-y-8"}>
+        <GlassCard className={`space-y-6 ${layoutMode === "grid" ? "flex flex-col h-full" : ""}`}>
+          <h2 className="text-xl font-semibold text-[var(--glass-text)] mb-6">Basic Info</h2>
+          
+          <div className="flex justify-center mb-6">
+             <ImageUpload 
+               currentImage={getValues("avatar") || session?.user?.image || null}
+               onUploadComplete={handleImageUpload}
+             />
+             {/* Hidden input to register avatar field */}
+             <input type="hidden" {...register("avatar")} />
           </div>
-        </div>
-      </GlassCard>
 
-      <GlassCard className="space-y-6">
-        <h2 className="text-xl font-semibold text-[var(--glass-text)] mb-6">Preferences</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
             <GlassInput
-                label="Min Budget ($)"
-                {...register("preferences.minBudget", { valueAsNumber: true })}
-                type="number"
+              label="Full Name"
+              {...register("name")}
+              placeholder="Your name"
+              error={errors.name?.message}
             />
+
             <GlassInput
-                label="Max Budget ($)"
-                {...register("preferences.maxBudget", { valueAsNumber: true })}
-                type="number"
+              label="Age"
+              {...register("age", { valueAsNumber: true })}
+              type="number"
+              placeholder="Your age"
+              error={errors.age?.message}
             />
-        </div>
 
-        <GlassInput
-            label="Preferred Cities (comma separated)"
-            {...register("preferences.preferredCities")}
-            placeholder="New York, Boston, Austin"
-            error={errors.preferences?.preferredCities?.message}
-        />
-
-        <GlassInput
-            label="Commute Distance (miles)"
-            {...register("preferences.commutDistance", { valueAsNumber: true })}
-            type="number"
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Sleep Schedule</label>
-                <select
-                    {...register("preferences.sleepSchedule")}
-                    className="glass-input w-full px-4 py-3 rounded-xl text-[var(--glass-text)]"
-                >
-                    <option value="early_bird" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Early Bird</option>
-                    <option value="night_owl" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Night Owl</option>
-                    <option value="flexible" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Flexible</option>
-                </select>
+              <label htmlFor="bio" className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">
+                Bio
+              </label>
+              <textarea
+                id="bio"
+                {...register("bio")}
+                className="glass-input w-full px-4 py-3 rounded-xl transition-all duration-200 placeholder-gray-500 dark:placeholder-white/40 focus:border-gray-400 dark:focus:border-white/60 focus:outline-none focus:shadow-[0_0_10px_rgba(255,255,255,0.1)]"
+                placeholder="Tell us about yourself"
+                rows={4}
+              />
+              {errors.bio && (
+                <p className="text-red-500 dark:text-red-300 text-xs mt-1 ml-1 animate-pulse">{errors.bio.message}</p>
+              )}
             </div>
-            <div>
-                <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Social Preference</label>
-                <select
-                    {...register("preferences.socialPreference")}
-                    className="glass-input w-full px-4 py-3 rounded-xl text-[var(--glass-text)]"
-                >
-                    <option value="introvert" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Introvert</option>
-                    <option value="extrovert" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Extrovert</option>
-                    <option value="ambivert" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Ambivert</option>
-                </select>
-            </div>
-        </div>
+          </div>
+        </GlassCard>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <div>
-                <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Cleanliness Level (1-5)</label>
-                <input
-                    {...register("preferences.cleanlinesLevel", { valueAsNumber: true })}
-                    type="range"
-                    min="1"
-                    max="5"
-                    className="w-full accent-blue-600 dark:accent-white"
-                />
-                <div className="flex justify-between text-xs text-[var(--glass-text)] opacity-70">
-                    <span>Messy</span>
-                    <span>Clean</span>
-                </div>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Smoking</label>
-                <select
-                    {...register("preferences.smokingStatus")}
-                    className="glass-input w-full px-4 py-3 rounded-xl text-[var(--glass-text)]"
-                >
-                    <option value="non_smoker" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Non-smoker</option>
-                    <option value="smoker" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Smoker</option>
-                    <option value="okay_with_smoker" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Okay with smoker</option>
-                </select>
-            </div>
-        </div>
-      </GlassCard>
+        <GlassCard className={`space-y-6 ${layoutMode === "grid" ? "flex flex-col h-full" : ""}`}>
+          <h2 className="text-xl font-semibold text-[var(--glass-text)] mb-6">Preferences</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <GlassInput
+                  label="Min Budget ($)"
+                  {...register("preferences.minBudget", { valueAsNumber: true })}
+                  type="number"
+              />
+              <GlassInput
+                  label="Max Budget ($)"
+                  {...register("preferences.maxBudget", { valueAsNumber: true })}
+                  type="number"
+              />
+          </div>
+
+          <GlassInput
+              label="Preferred Cities (comma separated)"
+              {...register("preferences.preferredCities")}
+              placeholder="New York, Boston, Austin"
+              error={errors.preferences?.preferredCities?.message}
+          />
+
+          <GlassInput
+              label="Commute Distance (miles)"
+              {...register("preferences.commutDistance", { valueAsNumber: true })}
+              type="number"
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                  <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Sleep Schedule</label>
+                  <select
+                      {...register("preferences.sleepSchedule")}
+                      className="glass-input w-full px-4 py-3 rounded-xl text-[var(--glass-text)]"
+                  >
+                      <option value="early_bird" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Early Bird</option>
+                      <option value="night_owl" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Night Owl</option>
+                      <option value="flexible" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Flexible</option>
+                  </select>
+              </div>
+              <div>
+                  <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Social Preference</label>
+                  <select
+                      {...register("preferences.socialPreference")}
+                      className="glass-input w-full px-4 py-3 rounded-xl text-[var(--glass-text)]"
+                  >
+                      <option value="introvert" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Introvert</option>
+                      <option value="extrovert" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Extrovert</option>
+                      <option value="ambivert" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Ambivert</option>
+                  </select>
+              </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div>
+                  <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Cleanliness Level (1-5)</label>
+                  <input
+                      {...register("preferences.cleanlinesLevel", { valueAsNumber: true })}
+                      type="range"
+                      min="1"
+                      max="5"
+                      className="w-full accent-blue-600 dark:accent-white"
+                  />
+                  <div className="flex justify-between text-xs text-[var(--glass-text)] opacity-70">
+                      <span>Messy</span>
+                      <span>Clean</span>
+                  </div>
+              </div>
+              <div>
+                  <label className="block text-sm font-medium text-[var(--glass-text)] opacity-90 mb-2 ml-1">Smoking</label>
+                  <select
+                      {...register("preferences.smokingStatus")}
+                      className="glass-input w-full px-4 py-3 rounded-xl text-[var(--glass-text)]"
+                  >
+                      <option value="non_smoker" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Non-smoker</option>
+                      <option value="smoker" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Smoker</option>
+                      <option value="okay_with_smoker" className="bg-white dark:bg-[#0a192f] text-black dark:text-white">Okay with smoker</option>
+                  </select>
+              </div>
+          </div>
+        </GlassCard>
+      </div>
+
+      <div className={layoutMode === "grid" ? "max-w-2xl mx-auto space-y-8 mt-8" : "space-y-8"}>
 
       {message && (
         <GlassCard
@@ -425,6 +429,8 @@ export default function ProfileForm() {
           )}
         </GlassCard>
       )}
+
+      </div>
 
       <GlassButton
         type="submit"

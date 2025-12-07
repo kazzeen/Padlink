@@ -173,7 +173,7 @@ export default function RequestsPage() {
                         {req.sender.name || "Anonymous"}
                       </h3>
                       <p className="text-xs text-[var(--glass-text-muted)]">
-                        {new Date(req.createdAt).toLocaleDateString()}
+                        {new Date(req.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}
                       </p>
                     </div>
                   </div>
@@ -267,7 +267,7 @@ export default function RequestsPage() {
                       {req.receiver.name || "Anonymous"}
                     </h3>
                     <p className="text-xs text-[var(--glass-text-muted)]">
-                      Sent on {new Date(req.createdAt).toLocaleDateString()}
+                      Sent on {new Date(req.createdAt).toLocaleDateString("en-US", { timeZone: "UTC" })}
                     </p>
                   </div>
                 </div>

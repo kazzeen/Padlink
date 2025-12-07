@@ -216,7 +216,7 @@ export default function ListingDetailsPage() {
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-[var(--glass-text-muted)]">Move-in Date</span>
-                <span className="font-medium">{new Date(listing.moveInDate).toLocaleDateString()}</span>
+                <span className="font-medium">{new Date(listing.moveInDate).toLocaleDateString("en-US", { timeZone: "UTC" })}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--glass-text-muted)]">Lease Term</span>
