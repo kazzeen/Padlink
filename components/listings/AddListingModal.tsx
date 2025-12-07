@@ -266,9 +266,10 @@ export default function AddListingModal({ isOpen, onClose, onSuccess, initialDat
                   >
                     <option value="" className="text-gray-500">Select Type</option>
                     <option value="Apartment" className="text-black">Apartment</option>
-                    <option value="House" className="text-black">House</option>
                     <option value="Condo" className="text-black">Condo</option>
+                    <option value="House" className="text-black">House</option>
                     <option value="Townhouse" className="text-black">Townhouse</option>
+                    <option value="Villa" className="text-black">Villa</option>
                   </select>
                   {errors.propertyType && <p className="text-red-500 text-xs mt-1">{errors.propertyType.message}</p>}
                 </div>
