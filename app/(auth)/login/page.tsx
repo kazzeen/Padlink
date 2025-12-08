@@ -59,11 +59,16 @@ function LoginPageInner() {
           Sign In
         </GlassButton>
 
-        {syncError && syncError.startsWith("login_error:") && (
-          <div className="mt-3 text-red-500 text-sm">
-            {syncError.includes("Origin not allowed")
-              ? "Login blocked: add http://localhost:3000 to Privy allowed origins (Dashboard → Security → Allowed Origins)."
-              : "Login failed. Please try again or use another method."}
+        {syncError && (
+          <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-left">
+            <p className="font-semibold mb-1">Authentication Error</p>
+            {syncError.startsWith("login_error:") ? (
+               syncError.includes("Origin not allowed")
+                ? "Login blocked: Add this domain to Privy Allowed Origins."
+                : "Login failed. Please try again."
+            ) : (
+              `Sync failed (${syncError}). Please retry.`
+            )}
           </div>
         )}
 

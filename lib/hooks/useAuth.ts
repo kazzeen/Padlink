@@ -27,28 +27,35 @@ export function useAuth() {
     try {
       setLoadingDbUser(true);
       setSyncError(null);
+      console.log("[Auth] Attempting to fetch profile...");
       const res = await fetch("/api/users/profile", { credentials: "include" });
       let needsSync = false;
 
       if (res.ok) {
         const data = await res.json();
+        console.log("[Auth] Profile fetch successful", data.id);
         if (privyUser?.id && data.privyId !== privyUser.id) {
+          console.warn("[Auth] Privy ID mismatch, resyncing...");
           needsSync = true;
         } else {
           setDbUser(data);
         }
       } else if (res.status === 401) {
+        console.log("[Auth] Profile fetch 401, attempting sync...");
         needsSync = true;
       } else {
+        console.error(`[Auth] Profile fetch failed: ${res.status}`);
         setSyncError(`profile_${res.status}`);
       }
 
       if (needsSync) {
         const token = await getAccessToken();
         if (!token) {
+          console.error("[Auth] No access token available for sync");
           setSyncError("missing_token");
           return;
         }
+        console.log("[Auth] Calling privy-sync...");
         const syncRes = await fetch("/api/auth/privy-sync", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -56,19 +63,25 @@ export function useAuth() {
         });
         if (syncRes.ok) {
           const synced = await syncRes.json();
+          console.log("[Auth] Sync successful, updating user state", synced.id);
           setDbUser(synced);
-          const retryRes = await fetch("/api/users/profile", { credentials: "include" });
-          if (retryRes.ok) {
-            const data = await retryRes.json();
-            setDbUser(data);
-          } else {
-            setSyncError(`profile_retry_${retryRes.status}`);
-          }
+          
+          // Optional: Verify cookie persistence by fetching profile again
+          // But don't block login if we already have the user data
+          fetch("/api/users/profile", { credentials: "include" })
+            .then(r => {
+                if (r.ok) r.json().then(setDbUser);
+                else console.warn("[Auth] Post-sync profile fetch failed, but sync was successful.");
+            })
+            .catch(e => console.error("[Auth] Post-sync fetch error", e));
+            
         } else {
           try {
             const details = await syncRes.json();
+            console.error(`[Auth] Sync failed: ${syncRes.status}`, details);
             setSyncError(`sync_${syncRes.status}:${details?.error || "unknown"}`);
           } catch {
+            console.error(`[Auth] Sync failed: ${syncRes.status}`);
             setSyncError(`sync_${syncRes.status}`);
           }
         }

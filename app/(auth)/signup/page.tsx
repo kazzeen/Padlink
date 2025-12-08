@@ -59,6 +59,19 @@ function SignupPageInner() {
           Sign Up
         </GlassButton>
 
+        {syncError && (
+          <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-left">
+            <p className="font-semibold mb-1">Authentication Error</p>
+            {syncError.startsWith("login_error:") ? (
+               syncError.includes("Origin not allowed")
+                ? "Login blocked: Add this domain to Privy Allowed Origins."
+                : "Login failed. Please try again."
+            ) : (
+              `Sync failed (${syncError}). Please retry.`
+            )}
+          </div>
+        )}
+
         {!canLogin && (
           <div className="text-red-500 text-sm mb-4">Authentication is not configured.</div>
         )}
