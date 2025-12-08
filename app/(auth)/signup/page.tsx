@@ -8,7 +8,7 @@ import GlassButton from "@/components/ui/glass/GlassButton";
 import { usePrivy } from "@privy-io/react-auth";
 
 function SignupPageInner() {
-  const { signIn, status, authReady, canLogin, sessionReady, retrySync } = useAuth();
+  const { signIn, status, authReady, canLogin, sessionReady, retrySync, syncError } = useAuth();
   const { ready: privyReady, authenticated: privyAuthenticated, user: privyUser } = usePrivy();
   const router = useRouter();
   const searchParams = useSearchParams();
