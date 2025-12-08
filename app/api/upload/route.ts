@@ -1,5 +1,8 @@
 import { getSession } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 import { logger } from "@/lib/logger";
 
 const MIME_TYPE_MAP: Record<string, string> = {
@@ -8,6 +11,14 @@ const MIME_TYPE_MAP: Record<string, string> = {
   "image/gif": "gif",
   "image/webp": "webp",
 };
+
+const UPLOAD_DIRS = {
+  property: "properties",
+  profile: "users/profiles",
+  roommate: "users/roommates",
+};
+
+type UploadType = keyof typeof UPLOAD_DIRS;
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,6 +35,15 @@ export async function POST(req: NextRequest) {
     if (!file) {
       logger.warn("Upload attempt without file", { userId: session.user.id });
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    // Validate type
+    if (!Object.keys(UPLOAD_DIRS).includes(type)) {
+      logger.warn("Invalid upload type", { userId: session.user.id, type });
+      return NextResponse.json(
+        { error: "Invalid upload type. Allowed: property, profile, roommate" },
+        { status: 400 }
+      );
     }
 
     // Validate file type
@@ -47,17 +67,40 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const mimeType = file.type;
-    const base64 = buffer.toString("base64");
-    const dataUrl = `data:${mimeType};base64,${base64}`;
+    const extension = MIME_TYPE_MAP[file.type] || "bin";
+    const filename = `${uuidv4()}.${extension}`;
+    
+    // Determine storage directory
+    const subDir = UPLOAD_DIRS[type as UploadType];
+    const uploadDir = path.join(process.cwd(), "public/uploads", subDir);
+    
+    // Ensure directory exists
+    try {
+        await mkdir(uploadDir, { recursive: true });
+    } catch (err) {
+        logger.error("Failed to create upload directory", { error: String(err) });
+        return NextResponse.json({ error: "Server storage error" }, { status: 500 });
+    }
 
-    logger.info("File processed successfully (base64)", { 
+    const filePath = path.join(uploadDir, filename);
+    
+    await writeFile(filePath, buffer);
+    
+    // Construct URL with subdirectories
+    // Note: Windows uses backslashes, but URLs must use forward slashes
+    const fileUrl = `/uploads/${subDir}/${filename}`.replace(/\\/g, "/");
+
+    logger.info("File uploaded successfully", { 
       userId: session.user.id, 
+      filename, 
       type,
       size: file.size 
     });
 
-    return NextResponse.json({ url: dataUrl }, { status: 201 });
+    // NOTE: We no longer automatically update the user profile here.
+    // The client is responsible for associating the returned URL with the correct entity (User or Listing).
+
+    return NextResponse.json({ url: fileUrl }, { status: 201 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error("Upload error:", { error: errorMessage });

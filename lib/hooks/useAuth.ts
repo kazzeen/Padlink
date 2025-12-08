@@ -20,6 +20,7 @@ export function useAuth() {
   const [dbUser, setDbUser] = useState<DBUser | null>(null);
   const [loadingDbUser, setLoadingDbUser] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [checkedServer, setCheckedServer] = useState(false);
   const appIdAvailable = Boolean(process.env.NEXT_PUBLIC_PRIVY_APP_ID);
   const router = useRouter();
 
@@ -27,35 +28,28 @@ export function useAuth() {
     try {
       setLoadingDbUser(true);
       setSyncError(null);
-      console.log("[Auth] Attempting to fetch profile...");
       const res = await fetch("/api/users/profile", { credentials: "include" });
       let needsSync = false;
 
       if (res.ok) {
         const data = await res.json();
-        console.log("[Auth] Profile fetch successful", data.id);
         if (privyUser?.id && data.privyId !== privyUser.id) {
-          console.warn("[Auth] Privy ID mismatch, resyncing...");
           needsSync = true;
         } else {
           setDbUser(data);
         }
       } else if (res.status === 401) {
-        console.log("[Auth] Profile fetch 401, attempting sync...");
         needsSync = true;
       } else {
-        console.error(`[Auth] Profile fetch failed: ${res.status}`);
         setSyncError(`profile_${res.status}`);
       }
 
       if (needsSync) {
         const token = await getAccessToken();
         if (!token) {
-          console.error("[Auth] No access token available for sync");
           setSyncError("missing_token");
           return;
         }
-        console.log("[Auth] Calling privy-sync...");
         const syncRes = await fetch("/api/auth/privy-sync", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -63,25 +57,19 @@ export function useAuth() {
         });
         if (syncRes.ok) {
           const synced = await syncRes.json();
-          console.log("[Auth] Sync successful, updating user state", synced.id);
           setDbUser(synced);
-          
-          // Optional: Verify cookie persistence by fetching profile again
-          // But don't block login if we already have the user data
-          fetch("/api/users/profile", { credentials: "include" })
-            .then(r => {
-                if (r.ok) r.json().then(setDbUser);
-                else console.warn("[Auth] Post-sync profile fetch failed, but sync was successful.");
-            })
-            .catch(e => console.error("[Auth] Post-sync fetch error", e));
-            
+          const retryRes = await fetch("/api/users/profile", { credentials: "include" });
+          if (retryRes.ok) {
+            const data = await retryRes.json();
+            setDbUser(data);
+          } else {
+            setSyncError(`profile_retry_${retryRes.status}`);
+          }
         } else {
           try {
             const details = await syncRes.json();
-            console.error(`[Auth] Sync failed: ${syncRes.status}`, details);
             setSyncError(`sync_${syncRes.status}:${details?.error || "unknown"}`);
           } catch {
-            console.error(`[Auth] Sync failed: ${syncRes.status}`);
             setSyncError(`sync_${syncRes.status}`);
           }
         }
@@ -94,16 +82,41 @@ export function useAuth() {
     }
   }, [getAccessToken, privyUser?.id]);
 
-  useEffect(() => {
-    if (ready && authenticated && !dbUser && !loadingDbUser) {
-      attemptSync();
-    } else if (!authenticated) {
-      setDbUser(null);
-      setSyncError(null);
+  const checkServerSession = useCallback(async () => {
+    try {
+      setLoadingDbUser(true);
+      const res = await fetch("/api/users/profile", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setDbUser(data);
+      } else if (res.status === 401) {
+        setDbUser(null);
+      } else {
+        setSyncError(`profile_${res.status}`);
+      }
+    } catch (err) {
+      console.error("Server session check error:", err);
+    } finally {
+      setLoadingDbUser(false);
+      setCheckedServer(true);
     }
-  }, [ready, authenticated, getAccessToken, privyUser?.id, dbUser, loadingDbUser, attemptSync]);
+  }, []);
 
-  const status = !ready ? "loading" : (authenticated ? "authenticated" : "unauthenticated");
+  useEffect(() => {
+    if (!checkedServer && !loadingDbUser) {
+      checkServerSession();
+    }
+  }, [checkedServer, loadingDbUser, checkServerSession]);
+
+  useEffect(() => {
+    if (ready && authenticated) {
+      attemptSync();
+    }
+  }, [ready, authenticated, attemptSync]);
+
+  const status = (!checkedServer || loadingDbUser)
+    ? "loading"
+    : (dbUser ? "authenticated" : "unauthenticated");
 
   const session = useMemo(() => {
     if (status !== "authenticated") return null;
@@ -151,6 +164,7 @@ export function useAuth() {
   };
 
   const handleSignIn = async () => {
+      console.log("useAuth.handleSignIn invoked", { appIdAvailable, ready });
       if (!appIdAvailable) {
         console.warn("Privy appId missing; login blocked");
         return;
@@ -160,14 +174,17 @@ export function useAuth() {
         return;
       }
       try {
+        console.log("useAuth.handleSignIn calling Privy login()");
         await login();
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        const isOriginError = /origin not allowed/i.test(msg);
-        setSyncError(`login_error:${msg}`);
-        if (isOriginError && typeof window !== "undefined") {
-          window.location.href = "/api/auth/signin/google?callbackUrl=/dashboard";
-        }
+        // Normalize common Google/OAuth error signals
+        const normalized = /popup/i.test(msg) ? "popup_closed_by_user"
+                         : /access_denied|permission/i.test(msg) ? "access_denied"
+                         : /network|timeout/i.test(msg) ? "network_error"
+                         : msg;
+        setSyncError(`login_error:${normalized}`);
+        console.error("Privy login failed", msg);
       }
   };
 

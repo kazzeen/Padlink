@@ -23,6 +23,7 @@ export async function getSession(): Promise<Session | null> {
   const nextAuthSession = await getServerSession(authOptions);
   if (nextAuthSession) {
     // Ensure id and role are present (NextAuth session callback adds them)
+    console.log("getSession: using NextAuth session");
     return nextAuthSession as unknown as Session;
   }
 
@@ -34,6 +35,7 @@ export async function getSession(): Promise<Session | null> {
 
   try {
     const { payload } = await jwtVerify(token, key);
+    console.log("getSession: using padlink_session cookie");
     
     return {
       user: {
@@ -46,6 +48,7 @@ export async function getSession(): Promise<Session | null> {
     };
   } catch {
     // Token invalid or expired
+    console.warn("getSession: padlink_session invalid");
     return null;
   }
 }

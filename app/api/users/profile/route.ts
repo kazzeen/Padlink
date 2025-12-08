@@ -12,7 +12,7 @@ const profileSchema = z.object({
   age: z.number().min(18).max(120).optional().nullable(),
   avatar: z.string().refine((val) => {
     if (!val) return true;
-    return val.startsWith("/") || /^(http|https):\/\//.test(val) || val.startsWith("data:");
+    return val.startsWith("/") || /^(http|https):\/\//.test(val);
   }, "Must be a valid URL or path").optional().nullable(),
   preferences: z.object({
     minBudget: z.number().min(0),
@@ -34,13 +34,12 @@ const profileSchema = z.object({
 });
 
 export async function GET() {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const session = await getSession();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { preferences: true },
@@ -55,10 +54,17 @@ export async function GET() {
     return NextResponse.json(user);
   } catch (error) {
     console.error("Profile fetch error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch profile" },
-      { status: 500 }
-    );
+    const minimal = {
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+      avatar: session.user.image,
+      image: session.user.image,
+      role: session.user.role,
+      preferences: null,
+    };
+    console.warn("Profile fallback: returning minimal session user");
+    return NextResponse.json(minimal);
   }
 }
 

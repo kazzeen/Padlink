@@ -122,9 +122,46 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error: unknown) {
     console.error("Error syncing Privy user:", error);
-    return NextResponse.json({ 
+    try {
+      const verifiedClaims = await privy.verifyAuthToken(token);
+      const privyUserId = verifiedClaims.userId;
+      const privyUser = await privy.getUser(privyUserId);
+      const email = privyUser.email?.address || `privy-${privyUserId}@padlink.local`;
+      const name = privyUser.google?.name || (email ? email.split("@")[0] : "New User");
+      const image = privyUser.google?.picture || null;
+
+      const payload = {
+        sub: `privy:${privyUserId}`,
+        userId: `privy:${privyUserId}`,
+        email,
+        role: "USER",
+        name,
+        image,
+      };
+
+      const jwt = await new SignJWT(payload)
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("7d")
+        .sign(key);
+
+      const response = NextResponse.json({ id: payload.userId, email: payload.email, name: payload.name, avatar: payload.image, role: payload.role });
+      response.cookies.set("padlink_session", jwt, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+
+      console.warn("Privy sync fallback: set session without DB");
+      return response;
+    } catch (fallbackError) {
+      console.error("Privy sync fallback failed:", fallbackError);
+      return NextResponse.json({ 
         error: "Internal Server Error", 
-        details: error instanceof Error ? error.message : "Unknown error" 
-    }, { status: 500 });
+        details: fallbackError instanceof Error ? fallbackError.message : "Unknown error" 
+      }, { status: 500 });
+    }
   }
 }

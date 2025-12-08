@@ -21,16 +21,24 @@ function LoginPageInner() {
   }, [sessionReady, router]);
 
   const handleSignIn = () => {
-    if (!authReady || !canLogin) return;
-    if (status === "unauthenticated") {
-      signIn();
+    const cb = searchParams.get("callbackUrl") || "/dashboard";
+    console.log("LoginPage.handleSignIn click", { authReady, canLogin, status, sessionReady, cb });
+    if (authReady && canLogin) {
+      if (status === "unauthenticated") {
+        console.log("LoginPage using Privy login()");
+        signIn();
+        return;
+      }
+      if (sessionReady) {
+        console.log("LoginPage has sessionReady, redirecting");
+        router.push("/dashboard");
+        return;
+      }
+      console.log("LoginPage attempting Privy sync retry");
+      retrySync();
       return;
     }
-    if (sessionReady) {
-      router.push("/dashboard");
-      return;
-    }
-    retrySync();
+    console.log("LoginPage authentication unavailable");
   };
 
   return (
@@ -54,21 +62,24 @@ function LoginPageInner() {
           onClick={handleSignIn}
           variant="primary"
           className="w-full mb-2"
-          disabled={!canLogin || !authReady}
+          disabled={sessionReady}
         >
           Sign In
         </GlassButton>
 
-        {syncError && (
-          <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm text-left">
-            <p className="font-semibold mb-1">Authentication Error</p>
-            {syncError.startsWith("login_error:") ? (
-               syncError.includes("Origin not allowed")
-                ? "Login blocked: Add this domain to Privy Allowed Origins."
-                : "Login failed. Please try again."
-            ) : (
-              `Sync failed (${syncError}). Please retry.`
-            )}
+        
+
+        {syncError && syncError.startsWith("login_error:") && (
+          <div className="mt-3 text-red-500 text-sm">
+            {syncError.includes("Origin not allowed")
+              ? "Login blocked: add http://localhost:3000 to Privy allowed origins (Dashboard → Security → Allowed Origins)."
+              : syncError.match(/popup|closed/i)
+                ? "Login canceled: the sign-in window was closed."
+                : syncError.match(/access_denied|permission/i)
+                  ? "Google denied access: please grant permissions and try again."
+                  : syncError.match(/network|timeout/i)
+                    ? "Network issue during Google sign-in: check your connection and retry."
+                    : "Login failed. Please try again or choose another method."}
           </div>
         )}
 

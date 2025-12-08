@@ -10,6 +10,10 @@ This document outlines the migration from NextAuth to Privy for authentication i
 - **New**: Privy (Email, Socials, Wallet)
 - **Hybrid**: The application currently supports BOTH NextAuth and Privy sessions to ensure no user is locked out during the transition.
 
+### Deprecations
+- Google sign-in has been removed across the app (NextAuth provider and Privy Google method disabled).
+- Guest login has been removed, including backend guest user creation.
+
 ### 2. Middleware (`middleware.ts`)
 The middleware has been updated to validate sessions from both sources:
 1. **Privy Session**: Checks for valid `padlink_session` JWT cookie (verified via `jose`).

@@ -51,6 +51,7 @@ export default function PrivyProviderWrapper({
             theme: "dark",
             accentColor: "#676FFF",
             walletChainType: "ethereum-and-solana",
+            // Use default social provider styling with brand icons
           },
           embeddedWallets: {
             ethereum: {
