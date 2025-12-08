@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
       const privyUser = await privy.getUser(privyUserId);
       const email = privyUser.email?.address || `privy-${privyUserId}@padlink.local`;
       const name = privyUser.google?.name || (email ? email.split("@")[0] : "New User");
-      const image = privyUser.google?.picture || null;
+      const image = null;
 
       const payload = {
         sub: `privy:${privyUserId}`,
